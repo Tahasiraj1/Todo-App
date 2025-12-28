@@ -1,0 +1,25 @@
+[project]
+name = "todo-app"
+version = "0.1.0"
+description = "Phase I - Todo Console App"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+todo = "src.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+]
+
