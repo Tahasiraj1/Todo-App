@@ -18,7 +18,7 @@ from src.services.task_service import TaskService
 def demo():
     """Demonstrate the complete workflow"""
     print("=" * 60)
-    print("Todo App - Phase I Demo")
+    print("Todo App - Phase I Demo (In-Memory Storage)")
     print("=" * 60)
     print()
     
