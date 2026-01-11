@@ -8,8 +8,19 @@ import { createAuthClient } from "better-auth/react";
 import { jwtClient } from "better-auth/client/plugins";
 
 // Create the auth client instance with JWT plugin
+// Better Auth runs on the same Next.js server, so we use the current origin in the browser
+// This automatically works for both localhost:3000 (dev) and production URLs
+const getBaseURL = (): string => {
+  // Client-side: use current origin (automatically works in dev and production)
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  // Server-side: use environment variable or default
+  return process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
+};
+
 export const authClient = createAuthClient({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: getBaseURL(),
   plugins: [jwtClient()],
 });
 
