@@ -64,3 +64,19 @@ Thumbs.db
 *.pyc
 __pycache__/
 
+
+# Node.js/TypeScript (Frontend)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Testing
+coverage/
+.nyc_output/

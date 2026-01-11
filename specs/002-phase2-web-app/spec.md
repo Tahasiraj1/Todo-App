@@ -9,7 +9,7 @@
 
 ### Session 2025-01-27
 
-- Q: How should API endpoints handle user_id parameter - from URL path or JWT token? → A: Extract user_id from JWT token only, remove from URL path. API endpoints should use pattern `/api/tasks` (not `/api/{user_id}/tasks`). Backend extracts authenticated user_id from decoded JWT token for all operations.
+- Q: How should API endpoints handle user_id parameter - from URL path or JWT token? → A: Per hackathon requirements, use the pattern `/api/{user_id}/tasks` with user_id in URL path. Backend must verify that the URL path user_id matches the user_id from the JWT token for security. This ensures users can only access their own tasks even if they manipulate URLs.
 - Q: What are the specific password requirements for user registration? → A: Use zxcvbn password strength library with minimum pass score of 3 (strong password). Password validation must use zxcvbn scoring algorithm.
 - Q: What happens when a user's session expires (inactive session)? → A: System silently attempts token refresh first. If refresh fails, then redirect to sign-in page with "Session expired" message.
 - Q: What should be displayed when a user has no tasks? → A: Show empty state message with "Add your first task" call-to-action button to guide users.
@@ -130,7 +130,7 @@ As a user, I want to access the todo application from any device (desktop, table
 - How does the system handle database connection failures?
 - What happens when a user provides a task description exceeding 1000 characters?
 - How does the system handle invalid or expired JWT tokens?
-- What happens when a user attempts to access another user's task via direct URL manipulation? (Note: Since user_id is extracted from JWT token, URL manipulation cannot access other users' tasks)
+- What happens when a user attempts to access another user's task via direct URL manipulation? Backend verifies URL path user_id matches JWT token user_id; returns 403 Forbidden if mismatch
 - How does the system handle rapid successive API requests from the same user?
 - What happens when the database is temporarily unavailable during a task operation?
 - How does the system handle special characters, emojis, or unicode in task titles and descriptions?
@@ -153,8 +153,8 @@ As a user, I want to access the todo application from any device (desktop, table
 - **FR-012**: System MUST allow authenticated users to delete their own tasks after confirmation via dialog with "Are you sure you want to delete this task?" message and Cancel/Delete buttons
 - **FR-013**: System MUST prevent users from accessing or modifying other users' tasks
 - **FR-014**: System MUST persist all task data in Neon Serverless PostgreSQL database
-- **FR-015**: System MUST provide RESTful API endpoints for all task operations (pattern: `/api/tasks`, `/api/tasks/{id}`, etc. - user_id extracted from JWT token, not URL path)
-- **FR-016**: System MUST require valid JWT token in Authorization header for all API requests and extract user_id from decoded token for authorization
+- **FR-015**: System MUST provide RESTful API endpoints for all task operations (pattern: `/api/{user_id}/tasks`, `/api/{user_id}/tasks/{id}`, `/api/{user_id}/tasks/{id}/complete` - per hackathon requirements)
+- **FR-016**: System MUST require valid JWT token in Authorization header for all API requests and verify that URL path user_id matches the user_id from decoded JWT token for authorization
 - **FR-017**: System MUST return appropriate HTTP status codes (200, 201, 400, 401, 404, 500)
 - **FR-018**: System MUST provide a responsive web interface that works on desktop, tablet, and mobile devices
 - **FR-026**: System MUST use shadcn/ui components (button, input, label, dialog, drawer, sidebar, and other components) for consistent UI design across all interface elements

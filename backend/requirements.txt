@@ -1,0 +1,27 @@
+# [Task]: T-003 [From]: plan.md §Technical Context
+# FastAPI backend dependencies for Phase II Todo App
+
+# Web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Database
+sqlmodel>=0.0.14
+psycopg2-binary>=2.9.9
+asyncpg>=0.29.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+PyJWT>=2.8.0
+
+# Validation and utilities
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# CORS
+starlette>=0.36.0
+
+# Code formatting (dev)
+ruff>=0.1.0
+black>=23.0.0

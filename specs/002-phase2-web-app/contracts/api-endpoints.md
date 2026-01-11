@@ -1,12 +1,14 @@
 # API Contract: Phase II - Todo Full-Stack Web Application
 
-**Date**: 2025-01-27  
-**Feature**: Phase II - Todo Full-Stack Web Application  
+**Date**: 2025-01-27
+**Feature**: Phase II - Todo Full-Stack Web Application
 **Branch**: `002-phase2-web-app`
 
 ## Overview
 
 This document defines the RESTful API contract for the Todo application backend. All endpoints require JWT authentication via the `Authorization: Bearer <token>` header.
+
+**Endpoint Pattern**: `/api/{user_id}/tasks` - per hackathon requirements, user_id is included in the URL path and must match the user_id from the JWT token.
 
 ## Base URL
 
@@ -23,7 +25,7 @@ All API endpoints require JWT authentication.
 
 **Token Verification**: Backend verifies token signature using shared secret (`BETTER_AUTH_SECRET`).
 
-**User Identification**: Backend extracts `user_id` from decoded JWT token. User_id is NOT included in URL path.
+**User Identification**: Backend extracts `user_id` from decoded JWT token AND verifies it matches the `user_id` in the URL path. If they don't match, returns 403 Forbidden.
 
 **Error Response (401 Unauthorized)**:
 ```json
@@ -38,6 +40,7 @@ All API endpoints require JWT authentication.
 - `201 Created`: Successful POST request (resource created)
 - `400 Bad Request`: Invalid request data or validation error
 - `401 Unauthorized`: Missing or invalid JWT token
+- `403 Forbidden`: URL path user_id does not match JWT token user_id
 - `404 Not Found`: Resource not found or user does not have access
 - `500 Internal Server Error`: Server error
 
@@ -68,17 +71,20 @@ All error responses follow this format:
 
 ### 1. List All Tasks
 
-**GET** `/api/tasks`
+**GET** `/api/{user_id}/tasks`
 
 **Description**: Retrieve all tasks belonging to the authenticated user.
 
 **Authentication**: Required (JWT token)
 
+**Path Parameters**:
+- `user_id` (string): User ID (must match JWT token user_id)
+
 **Query Parameters**: None
 
 **Request Example**:
 ```http
-GET /api/tasks HTTP/1.1
+GET /api/user-123/tasks HTTP/1.1
 Host: localhost:8000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -118,17 +124,21 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Error Responses**:
 - `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: URL user_id does not match JWT token user_id
 - `500 Internal Server Error`: Database error
 
 ---
 
 ### 2. Create Task
 
-**POST** `/api/tasks`
+**POST** `/api/{user_id}/tasks`
 
 **Description**: Create a new task for the authenticated user.
 
 **Authentication**: Required (JWT token)
+
+**Path Parameters**:
+- `user_id` (string): User ID (must match JWT token user_id)
 
 **Request Body**:
 ```json
@@ -144,7 +154,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Request Example**:
 ```http
-POST /api/tasks HTTP/1.1
+POST /api/user-123/tasks HTTP/1.1
 Host: localhost:8000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
@@ -171,6 +181,7 @@ Content-Type: application/json
 **Error Responses**:
 - `400 Bad Request`: Validation error (missing title, title too long, description too long)
 - `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: URL user_id does not match JWT token user_id
 - `500 Internal Server Error`: Database error
 
 **Validation Error Example (400)**:
@@ -190,18 +201,19 @@ Content-Type: application/json
 
 ### 3. Get Task by ID
 
-**GET** `/api/tasks/{id}`
+**GET** `/api/{user_id}/tasks/{id}`
 
 **Description**: Retrieve a specific task by ID. Only returns task if it belongs to the authenticated user.
 
 **Authentication**: Required (JWT token)
 
 **Path Parameters**:
+- `user_id` (string): User ID (must match JWT token user_id)
 - `id` (integer): Task ID
 
 **Request Example**:
 ```http
-GET /api/tasks/1 HTTP/1.1
+GET /api/user-123/tasks/1 HTTP/1.1
 Host: localhost:8000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -221,6 +233,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Error Responses**:
 - `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: URL user_id does not match JWT token user_id
 - `404 Not Found`: Task not found or does not belong to authenticated user
 - `500 Internal Server Error`: Database error
 
@@ -228,13 +241,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 4. Update Task
 
-**PUT** `/api/tasks/{id}`
+**PUT** `/api/{user_id}/tasks/{id}`
 
 **Description**: Update an existing task. Only allows update if task belongs to the authenticated user.
 
 **Authentication**: Required (JWT token)
 
 **Path Parameters**:
+- `user_id` (string): User ID (must match JWT token user_id)
 - `id` (integer): Task ID
 
 **Request Body**:
@@ -253,7 +267,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Request Example**:
 ```http
-PUT /api/tasks/1 HTTP/1.1
+PUT /api/user-123/tasks/1 HTTP/1.1
 Host: localhost:8000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
@@ -280,6 +294,7 @@ Content-Type: application/json
 **Error Responses**:
 - `400 Bad Request`: Validation error (empty title, title too long, description too long)
 - `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: URL user_id does not match JWT token user_id
 - `404 Not Found`: Task not found or does not belong to authenticated user
 - `500 Internal Server Error`: Database error
 
@@ -287,18 +302,19 @@ Content-Type: application/json
 
 ### 5. Delete Task
 
-**DELETE** `/api/tasks/{id}`
+**DELETE** `/api/{user_id}/tasks/{id}`
 
 **Description**: Delete a task. Only allows deletion if task belongs to the authenticated user.
 
 **Authentication**: Required (JWT token)
 
 **Path Parameters**:
+- `user_id` (string): User ID (must match JWT token user_id)
 - `id` (integer): Task ID
 
 **Request Example**:
 ```http
-DELETE /api/tasks/1 HTTP/1.1
+DELETE /api/user-123/tasks/1 HTTP/1.1
 Host: localhost:8000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -315,6 +331,7 @@ No response body, just status code 204.
 
 **Error Responses**:
 - `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: URL user_id does not match JWT token user_id
 - `404 Not Found`: Task not found or does not belong to authenticated user
 - `500 Internal Server Error`: Database error
 
@@ -322,18 +339,19 @@ No response body, just status code 204.
 
 ### 6. Toggle Task Completion
 
-**PATCH** `/api/tasks/{id}/complete`
+**PATCH** `/api/{user_id}/tasks/{id}/complete`
 
 **Description**: Toggle the completion status of a task. Only allows toggle if task belongs to the authenticated user.
 
 **Authentication**: Required (JWT token)
 
 **Path Parameters**:
+- `user_id` (string): User ID (must match JWT token user_id)
 - `id` (integer): Task ID
 
 **Request Example**:
 ```http
-PATCH /api/tasks/1/complete HTTP/1.1
+PATCH /api/user-123/tasks/1/complete HTTP/1.1
 Host: localhost:8000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -355,6 +373,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 **Error Responses**:
 - `401 Unauthorized`: Missing or invalid token
+- `403 Forbidden`: URL user_id does not match JWT token user_id
 - `404 Not Found`: Task not found or does not belong to authenticated user
 - `500 Internal Server Error`: Database error
 
@@ -362,13 +381,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ## Security Notes
 
-1. **User Isolation**: All endpoints automatically filter by authenticated user_id from JWT token. Users cannot access or modify other users' tasks.
+1. **User Isolation**: All endpoints include user_id in URL path AND verify it matches the JWT token user_id. Users cannot access or modify other users' tasks.
 
 2. **Token Verification**: Backend verifies JWT token signature using shared secret. Invalid or expired tokens return 401.
 
-3. **Input Validation**: All request bodies are validated for required fields, data types, and length constraints.
+3. **URL User ID Verification**: Backend compares URL path user_id with JWT token user_id. Mismatches return 403 Forbidden.
 
-4. **Authorization**: Task operations (GET, PUT, DELETE, PATCH) verify that the task belongs to the authenticated user before proceeding.
+4. **Input Validation**: All request bodies are validated for required fields, data types, and length constraints.
+
+5. **Authorization**: Task operations (GET, PUT, DELETE, PATCH) verify that the task belongs to the authenticated user before proceeding.
 
 ## Rate Limiting
 

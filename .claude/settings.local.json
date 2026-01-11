@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(dir:*)",
+      "Bash(uv run:*)",
+      "mcp__better-auth__search",
+      "Bash(npm install:*)"
+    ]
+  }
+}

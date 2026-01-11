@@ -16,10 +16,17 @@ security:
   - bearerAuth: []
 
 paths:
-  /api/tasks:
+  /api/{user_id}/tasks:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: User ID (must match JWT token user_id)
     get:
       summary: List all tasks
-      description: Retrieve all tasks belonging to the authenticated user
+      description: Retrieve all tasks belonging to the authenticated user. URL user_id must match JWT token user_id.
       operationId: listTasks
       tags:
         - Tasks
@@ -37,12 +44,14 @@ paths:
                       $ref: '#/components/schemas/Task'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
     post:
       summary: Create task
-      description: Create a new task for the authenticated user
+      description: Create a new task for the authenticated user. URL user_id must match JWT token user_id.
       operationId: createTask
       tags:
         - Tasks
@@ -63,13 +72,22 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/tasks/{id}:
+  /api/{user_id}/tasks/{id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: User ID (must match JWT token user_id)
     get:
       summary: Get task by ID
-      description: Retrieve a specific task by ID. Only returns task if it belongs to the authenticated user.
+      description: Retrieve a specific task by ID. Only returns task if it belongs to the authenticated user. URL user_id must match JWT token user_id.
       operationId: getTask
       tags:
         - Tasks
@@ -89,6 +107,8 @@ paths:
                 $ref: '#/components/schemas/Task'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -96,7 +116,7 @@ paths:
 
     put:
       summary: Update task
-      description: Update an existing task. Only allows update if task belongs to the authenticated user.
+      description: Update an existing task. Only allows update if task belongs to the authenticated user. URL user_id must match JWT token user_id.
       operationId: updateTask
       tags:
         - Tasks
@@ -124,6 +144,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -131,7 +153,7 @@ paths:
 
     delete:
       summary: Delete task
-      description: Delete a task. Only allows deletion if task belongs to the authenticated user.
+      description: Delete a task. Only allows deletion if task belongs to the authenticated user. URL user_id must match JWT token user_id.
       operationId: deleteTask
       tags:
         - Tasks
@@ -155,15 +177,24 @@ paths:
                     example: "Task deleted successfully"
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/tasks/{id}/complete:
+  /api/{user_id}/tasks/{id}/complete:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: User ID (must match JWT token user_id)
     patch:
       summary: Toggle task completion
-      description: Toggle the completion status of a task. Only allows toggle if task belongs to the authenticated user.
+      description: Toggle the completion status of a task. Only allows toggle if task belongs to the authenticated user. URL user_id must match JWT token user_id.
       operationId: toggleTaskCompletion
       tags:
         - Tasks
@@ -183,6 +214,8 @@ paths:
                 $ref: '#/components/schemas/Task'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -294,6 +327,13 @@ components:
 
     Unauthorized:
       description: Unauthorized - missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden - URL user_id does not match JWT token user_id
       content:
         application/json:
           schema:
