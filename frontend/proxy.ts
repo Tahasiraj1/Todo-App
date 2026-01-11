@@ -1,8 +1,7 @@
 // [Task]: T038 [From]: spec.md §FR-019
 /**
- * Next.js proxy for protected route authentication.
+ * Next.js middleware for protected route authentication.
  * Redirects unauthenticated users to sign-in page.
- * Updated for Next.js 16+ which uses proxy instead of middleware.
  */
 
 import { NextResponse } from "next/server";
@@ -17,13 +16,16 @@ const authRoutes = ["/sign-in", "/sign-up"];
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check for auth token in cookies or headers
-  // Better Auth stores session in cookies
-  const token =
+  // Check for auth token in cookies
+  // Better Auth stores session in cookies - default cookie name is "session_token"
+  // Check multiple possible cookie names for compatibility
+  const sessionToken =
+    request.cookies.get("session_token")?.value ||
+    request.cookies.get("__better-auth.session_token")?.value ||
     request.cookies.get("better-auth.session_token")?.value ||
     request.cookies.get("auth_token")?.value;
 
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!sessionToken;
 
   // Check if accessing a protected route
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -56,8 +58,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
-     * - api routes
+     * - api routes (Better Auth handles its own auth)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api).*)",
   ],
 };
