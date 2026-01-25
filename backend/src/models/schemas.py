@@ -98,3 +98,73 @@ class TaskListResponse(BaseModel):
 class MessageResponse(BaseModel):
     """Schema for simple message response."""
     message: str
+
+
+# Chat API Schemas (Phase III)
+
+
+class ChatRequest(BaseModel):
+    """Schema for chat API request."""
+    conversation_id: Optional[int] = Field(
+        None, description="Existing conversation ID. If not provided, creates a new conversation"
+    )
+    message: str = Field(..., min_length=1, max_length=2000, description="User's natural language message")
+
+    @field_validator("message")
+    @classmethod
+    def message_not_empty(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Message cannot be empty")
+        return sanitize_text(v)
+
+
+class ToolCall(BaseModel):
+    """Schema for a tool invocation during chat processing."""
+    tool: str = Field(..., description="Name of the MCP tool that was called")
+    parameters: dict = Field(..., description="Parameters passed to the tool")
+    result: Optional[dict | list] = Field(None, description="Result returned by the tool")
+
+    model_config = {"from_attributes": True}
+
+
+class ChatResponse(BaseModel):
+    """Schema for chat API response."""
+    conversation_id: int = Field(..., description="The conversation ID (new or existing)")
+    response: str = Field(..., description="AI assistant's response message")
+    tool_calls: list[ToolCall] = Field(
+        default_factory=list, description="List of MCP tools that were invoked during processing"
+    )
+
+    model_config = {"from_attributes": True}
+
+
+class ChatMessageResponse(BaseModel):
+    """Schema for a single message in conversation history."""
+    id: int
+    role: str
+    content: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ConversationSummary(BaseModel):
+    """Schema for conversation list response (without messages)."""
+    id: int
+    user_id: str
+    created_at: datetime
+    updated_at: datetime
+    message_count: Optional[int] = None
+
+    model_config = {"from_attributes": True}
+
+
+class ConversationResponse(BaseModel):
+    """Schema for single conversation with messages."""
+    id: int
+    user_id: str
+    created_at: datetime
+    updated_at: datetime
+    messages: list[ChatMessageResponse] = Field(default_factory=list)
+
+    model_config = {"from_attributes": True}

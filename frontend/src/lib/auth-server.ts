@@ -14,10 +14,26 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+// Get the base URL for Better Auth
+// In production (Vercel), use VERCEL_URL or set BETTER_AUTH_URL
+// In development, use localhost
+const getBaseURL = (): string => {
+  // Production URL from environment variable
+  if (process.env.BETTER_AUTH_URL) {
+    return process.env.BETTER_AUTH_URL;
+  }
+  // Vercel provides VERCEL_URL - use it if available
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  // Fallback to NEXT_PUBLIC_BETTER_AUTH_URL or localhost
+  return process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
+};
+
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3001",
+  baseURL: getBaseURL(),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

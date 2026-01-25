@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
+    from .conversation import Conversation
+    from .message import Message
     from .task import Task
 
 
@@ -39,5 +41,7 @@ class User(SQLModel, table=True):
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
-    # Relationship to tasks
+    # Relationships
     tasks: list["Task"] = Relationship(back_populates="user")
+    conversations: list["Conversation"] = Relationship(back_populates="user")
+    messages: list["Message"] = Relationship(back_populates="user")

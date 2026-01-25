@@ -1,0 +1,429 @@
+openapi: 3.1.0
+info:
+  title: Todo Chatbot API
+  description: |
+    Chat API for Phase III AI-Powered Todo Chatbot.
+    Provides natural language interface for task management via OpenAI Agents SDK with Google Gemini.
+  version: 1.0.0
+  contact:
+    name: Todo App Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.todo-app.example.com
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      operationId: sendChatMessage
+      summary: Send a chat message and receive AI response
+      description: |
+        Send a natural language message to the AI assistant. The assistant will:
+        1. Interpret the user's intent
+        2. Execute appropriate MCP tools (add_task, list_tasks, etc.)
+        3. Return a conversational response with tool execution results
+
+        If no conversation_id is provided, a new conversation is created.
+      tags:
+        - Chat
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The authenticated user's ID (must match JWT token)
+          schema:
+            type: string
+            example: usr_abc123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              newConversation:
+                summary: Start new conversation
+                value:
+                  message: "Add a task to buy groceries"
+              existingConversation:
+                summary: Continue conversation
+                value:
+                  conversation_id: 1
+                  message: "Mark the groceries task as complete"
+      responses:
+        '200':
+          description: Successful response with AI message and tool calls
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                taskCreated:
+                  summary: Task creation response
+                  value:
+                    conversation_id: 1
+                    response: "I've created a new task 'Buy groceries' for you. Is there anything else you'd like me to add?"
+                    tool_calls:
+                      - tool: add_task
+                        parameters:
+                          user_id: usr_abc123
+                          title: Buy groceries
+                        result:
+                          task_id: 5
+                          status: created
+                          title: Buy groceries
+                taskListed:
+                  summary: Task listing response
+                  value:
+                    conversation_id: 1
+                    response: "Here are your current tasks:\n\n1. Buy groceries (pending)\n2. Call mom (completed)\n\nWould you like to add a new task or mark any as complete?"
+                    tool_calls:
+                      - tool: list_tasks
+                        parameters:
+                          user_id: usr_abc123
+                          status: all
+                        result:
+                          - id: 1
+                            title: Buy groceries
+                            completed: false
+                          - id: 2
+                            title: Call mom
+                            completed: true
+        '400':
+          description: Bad request - invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "message is required"
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "Authentication required"
+        '403':
+          description: Forbidden - user_id mismatch with JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "User ID mismatch"
+        '404':
+          description: Conversation not found or doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "Conversation not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "An error occurred while processing your request"
+
+  /api/{user_id}/conversations:
+    get:
+      operationId: listConversations
+      summary: List user's conversations
+      description: Retrieve all conversations for the authenticated user, ordered by most recent.
+      tags:
+        - Conversations
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConversationSummary'
+                  total:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/{user_id}/conversations/{conversation_id}:
+    get:
+      operationId: getConversation
+      summary: Get conversation with full message history
+      description: Retrieve a specific conversation with all messages.
+      tags:
+        - Conversations
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      operationId: deleteConversation
+      summary: Delete a conversation
+      description: Delete a conversation and all its messages.
+      tags:
+        - Conversations
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Conversation deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Better Auth
+
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        conversation_id:
+          type: integer
+          description: Existing conversation ID to continue. If omitted, creates new conversation.
+          example: 1
+        message:
+          type: string
+          description: User's natural language message
+          maxLength: 2000
+          example: "Add a task to buy groceries"
+
+    ChatResponse:
+      type: object
+      required:
+        - conversation_id
+        - response
+        - tool_calls
+      properties:
+        conversation_id:
+          type: integer
+          description: The conversation ID (new or existing)
+          example: 1
+        response:
+          type: string
+          description: AI assistant's natural language response
+          example: "I've created a new task 'Buy groceries' for you."
+        tool_calls:
+          type: array
+          description: List of MCP tools that were invoked
+          items:
+            $ref: '#/components/schemas/ToolCall'
+
+    ToolCall:
+      type: object
+      required:
+        - tool
+        - parameters
+        - result
+      properties:
+        tool:
+          type: string
+          enum: [add_task, list_tasks, complete_task, delete_task, update_task]
+          description: Name of the MCP tool that was called
+        parameters:
+          type: object
+          description: Parameters passed to the tool
+          additionalProperties: true
+        result:
+          oneOf:
+            - $ref: '#/components/schemas/TaskResult'
+            - type: array
+              items:
+                $ref: '#/components/schemas/TaskListItem'
+            - $ref: '#/components/schemas/ToolError'
+
+    TaskResult:
+      type: object
+      properties:
+        task_id:
+          type: integer
+        status:
+          type: string
+          enum: [created, completed, updated, deleted]
+        title:
+          type: string
+
+    TaskListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        completed:
+          type: boolean
+        description:
+          type: string
+          nullable: true
+
+    ToolError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    ConversationSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+        last_message_preview:
+          type: string
+          description: Truncated preview of the last message
+
+    ConversationDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Authentication required"
+
+    Forbidden:
+      description: Forbidden - user_id mismatch with JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "User ID mismatch"
+
+tags:
+  - name: Chat
+    description: AI-powered chat operations for task management
+  - name: Conversations
+    description: Conversation management endpoints

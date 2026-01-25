@@ -67,6 +67,7 @@ async function fetchWithAuth<T>(
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   // Handle 401 Unauthorized - session expired

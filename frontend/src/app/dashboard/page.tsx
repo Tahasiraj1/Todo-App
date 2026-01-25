@@ -1,4 +1,4 @@
-// [Task]: T046, T056, T089 [From]: spec.md §US-002
+// [Task]: T046, T056, T089, T040 [From]: spec.md §US-002
 "use client";
 
 /**
@@ -7,6 +7,9 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskForm } from "@/components/tasks/task-form";
 import { TaskList } from "@/components/tasks/task-list";
@@ -99,7 +102,15 @@ export default function DashboardPage() {
           <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
             Todo App
           </h1>
-          <SignOutButton />
+          <div className="flex items-center gap-2">
+            <Link href="/chat">
+              <Button variant="outline" size="sm" className="gap-2">
+                <MessageSquare className="size-4" />
+                <span className="hidden sm:inline">AI Chat</span>
+              </Button>
+            </Link>
+            <SignOutButton />
+          </div>
         </div>
       </header>
 

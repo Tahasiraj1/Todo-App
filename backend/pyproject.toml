@@ -19,6 +19,9 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
     "PyNaCl>=1.5.0",
+    # AI Agent (Phase III)
+    "openai-agents[litellm]>=0.2.0",
+    "sse-starlette>=2.0.0",
 ]
 
 [project.optional-dependencies]
