@@ -34,6 +34,12 @@ export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: getBaseURL(),
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://todo-app-coral-two-71.vercel.app",
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+  ].filter(Boolean),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
