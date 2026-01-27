@@ -175,7 +175,7 @@ export default function SignUpPage() {
             <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full mt-3"
                 disabled={isLoading || !isPasswordValid}
               >
                 {isLoading ? "initializing..." : "register"}
