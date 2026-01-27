@@ -120,7 +120,7 @@ export default function SignInPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full mt-3" disabled={isLoading}>
                 {isLoading ? "authenticating..." : "login"}
               </Button>
 
