@@ -86,103 +86,119 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Create an account
-          </CardTitle>
-          <CardDescription className="text-center">
-            Enter your details to get started
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 bg-background">
+      <div className="w-full max-w-md space-y-6 animate-fade-in-up">
+        {/* Terminal header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-2 text-terminal text-xs uppercase tracking-widest">
+            <span className="size-2 rounded-full bg-terminal animate-pulse-soft shadow-[0_0_8px_var(--terminal-glow)]" />
+            new_user_registration
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {/* Error message */}
-            {error && (
-              <div
-                className="rounded-md bg-red-50 p-3 text-sm text-red-600"
-                role="alert"
-              >
-                {error}
-              </div>
-            )}
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-center">
+              <span className="text-terminal-dim mr-2">&gt;</span>
+              create_account
+            </CardTitle>
+            <CardDescription className="text-center">
+              initialize user profile
+            </CardDescription>
+          </CardHeader>
 
-            {/* Name field */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                required
-                disabled={isLoading}
-                autoComplete="name"
-              />
-            </div>
-
-            {/* Email field */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (emailError) validateEmail(e.target.value);
-                }}
-                onBlur={() => validateEmail(email)}
-                placeholder="Enter your email"
-                required
-                disabled={isLoading}
-                autoComplete="email"
-                className={emailError ? "border-red-500" : ""}
-              />
-              {emailError && (
-                <p className="text-xs text-red-600" role="alert">
-                  {emailError}
-                </p>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              {/* Error message */}
+              {error && (
+                <div
+                  className="rounded-sm bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive animate-fade-in-up"
+                  role="alert"
+                >
+                  <span className="opacity-70 mr-1">[ERROR]</span> {error}
+                </div>
               )}
-            </div>
 
-            {/* Password field with strength meter */}
-            <PasswordInput
-              id="password"
-              value={password}
-              onChange={setPassword}
-              showStrength={true}
-              minScore={3}
-              label="Password"
-              placeholder="Choose a strong password"
-              disabled={isLoading}
-            />
-          </CardContent>
+              {/* Name field */}
+              <div className="space-y-2">
+                <Label htmlFor="name">username</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="your_name"
+                  required
+                  disabled={isLoading}
+                  autoComplete="name"
+                />
+              </div>
 
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isPasswordValid}
-            >
-              {isLoading ? "Creating account..." : "Create account"}
-            </Button>
+              {/* Email field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) validateEmail(e.target.value);
+                  }}
+                  onBlur={() => validateEmail(email)}
+                  placeholder="user@domain.com"
+                  required
+                  disabled={isLoading}
+                  autoComplete="email"
+                  className={emailError ? "border-destructive shadow-[0_0_10px_oklch(0.55_0.22_25/30%)]" : ""}
+                />
+                {emailError && (
+                  <p className="text-xs text-destructive animate-fade-in-up" role="alert">
+                    <span className="opacity-70">[!]</span> {emailError}
+                  </p>
+                )}
+              </div>
 
-            <p className="text-center text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link
-                href="/sign-in"
-                className="font-medium text-primary hover:underline"
+              {/* Password field with strength meter */}
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={setPassword}
+                showStrength={true}
+                minScore={3}
+                label="password"
+                placeholder="secure_passphrase"
+                disabled={isLoading}
+              />
+            </CardContent>
+
+            <CardFooter className="flex flex-col space-y-4">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || !isPasswordValid}
               >
-                Sign in
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+                {isLoading ? "initializing..." : "register"}
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground tracking-wide">
+                existing user?{" "}
+                <Link
+                  href="/sign-in"
+                  className="font-medium text-terminal hover:text-terminal-bright hover:underline transition-colors"
+                >
+                  auth_login
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+
+        {/* Decorative terminal prompt */}
+        <div className="text-center text-[10px] text-terminal-dim uppercase tracking-wider">
+          <span className="animate-terminal-blink">_</span>
+        </div>
+      </div>
     </div>
   );
 }

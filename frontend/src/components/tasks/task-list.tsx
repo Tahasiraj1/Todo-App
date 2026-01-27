@@ -34,9 +34,18 @@ export function TaskList({
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-24 animate-pulse rounded-lg bg-gray-100"
-          />
+            className="h-24 rounded-sm bg-muted/50 border border-border/30 relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-terminal/5 to-transparent animate-[shimmer_2s_infinite]" style={{ backgroundSize: '200% 100%' }} />
+            <div className="p-4 space-y-3">
+              <div className="h-4 w-3/4 bg-terminal/10 rounded-sm" />
+              <div className="h-3 w-1/2 bg-terminal/5 rounded-sm" />
+            </div>
+          </div>
         ))}
+        <p className="text-xs text-terminal-dim text-center uppercase tracking-wider animate-pulse-soft">
+          loading tasks...
+        </p>
       </div>
     );
   }
@@ -45,16 +54,23 @@ export function TaskList({
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <ClipboardList className="mb-4 h-16 w-16 text-gray-300" />
-        <h3 className="text-lg font-medium text-gray-900">No tasks yet</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Get started by adding your first task
+        <div className="relative mb-4">
+          <ClipboardList className="h-16 w-16 text-terminal/30" />
+          <div className="absolute inset-0 blur-xl bg-terminal/10" />
+        </div>
+        <h3 className="text-sm font-medium text-foreground uppercase tracking-wider">
+          <span className="text-terminal-dim">[</span>
+          no_tasks
+          <span className="text-terminal-dim">]</span>
+        </h3>
+        <p className="mt-2 text-xs text-muted-foreground tracking-wide">
+          initialize your first task to begin
         </p>
         <button
           onClick={onAddFirstTask}
-          className="mt-4 text-sm font-medium text-primary hover:underline"
+          className="mt-4 text-xs font-medium text-terminal hover:text-terminal-bright uppercase tracking-wider transition-colors hover:underline"
         >
-          Add your first task
+          &gt; create_task
         </button>
       </div>
     );

@@ -94,17 +94,17 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
       {/* Error message */}
       {error && (
         <div
-          className="rounded-md bg-red-50 p-3 text-sm text-red-600"
+          className="rounded-sm bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive animate-fade-in-up"
           role="alert"
         >
-          {error}
+          <span className="opacity-70 mr-1">[ERROR]</span> {error}
         </div>
       )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
         {/* Title field */}
         <div className="flex-1 space-y-2">
-          <Label htmlFor="task-title">Title</Label>
+          <Label htmlFor="task-title">title</Label>
           <Input
             id="task-title"
             type="text"
@@ -114,28 +114,28 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
               if (titleError) validateTitle(e.target.value);
             }}
             onBlur={() => title && validateTitle(title)}
-            placeholder="What needs to be done?"
+            placeholder="what needs to be done?"
             required
             disabled={isLoading}
             maxLength={200}
-            className={titleError ? "border-red-500" : ""}
+            className={titleError ? "border-destructive shadow-[0_0_10px_oklch(0.55_0.22_25/30%)]" : ""}
           />
           {titleError && (
-            <p className="text-xs text-red-600" role="alert">
-              {titleError}
+            <p className="text-xs text-destructive animate-fade-in-up" role="alert">
+              <span className="opacity-70">[!]</span> {titleError}
             </p>
           )}
         </div>
 
         {/* Description field */}
         <div className="flex-1 space-y-2">
-          <Label htmlFor="task-description">Description (optional)</Label>
+          <Label htmlFor="task-description">description <span className="normal-case text-muted-foreground/60">(optional)</span></Label>
           <Input
             id="task-description"
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add details..."
+            placeholder="add details..."
             disabled={isLoading}
             maxLength={1000}
           />
@@ -144,14 +144,14 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
         {/* Submit button */}
         <Button type="submit" disabled={isLoading || !title.trim()}>
           <Plus className="mr-2 h-4 w-4" />
-          {isLoading ? "Adding..." : "Add Task"}
+          {isLoading ? "adding..." : "add_task"}
         </Button>
       </div>
 
       {/* Character count */}
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>Title: {title.length}/200</span>
-        <span>Description: {description.length}/1000</span>
+      <div className="flex justify-between text-[10px] text-terminal-dim uppercase tracking-wider">
+        <span>title: {title.length}/200</span>
+        <span>desc: {description.length}/1000</span>
       </div>
     </form>
   );

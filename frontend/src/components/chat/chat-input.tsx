@@ -55,31 +55,37 @@ export function ChatInput({
   return (
     <div
       className={cn(
-        "flex items-end gap-2 p-4 border-t bg-background",
+        "flex items-end gap-3 p-4 border-t border-border/60 bg-card/30",
         className
       )}
     >
-      <textarea
-        ref={textareaRef}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={disabled}
-        rows={1}
-        className={cn(
-          "flex-1 resize-none rounded-xl border bg-background px-4 py-3",
-          "placeholder:text-muted-foreground",
-          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          "min-h-[48px] max-h-[200px]"
-        )}
-      />
+      <div className="flex-1 relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-terminal-dim text-sm pointer-events-none">
+          &gt;
+        </span>
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={1}
+          className={cn(
+            "flex-1 w-full resize-none rounded-sm border border-border/60 bg-input/50 pl-8 pr-4 py-3 text-sm tracking-wide",
+            "placeholder:text-terminal-dim placeholder:text-xs placeholder:uppercase placeholder:tracking-wider",
+            "focus:outline-none focus:border-terminal focus:bg-input/80 focus:shadow-[0_0_10px_var(--terminal-glow)]",
+            "disabled:opacity-40 disabled:cursor-not-allowed",
+            "min-h-[48px] max-h-[200px]",
+            "transition-all duration-200"
+          )}
+        />
+      </div>
       <Button
         onClick={handleSend}
         disabled={disabled || !message.trim()}
         size="icon"
-        className="shrink-0 size-12 rounded-xl"
+        className="shrink-0 size-12 rounded-sm"
       >
         <Send className="size-5" />
         <span className="sr-only">Send message</span>

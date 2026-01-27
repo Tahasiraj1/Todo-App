@@ -68,21 +68,24 @@ export function DeleteTaskDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-destructive/10 border border-destructive/30">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
-            <DialogTitle>Delete Task</DialogTitle>
+            <DialogTitle className="text-destructive">
+              <span className="opacity-70 mr-2">[!]</span>
+              delete_task
+            </DialogTitle>
           </div>
           <DialogDescription className="pt-2">
-            Are you sure you want to delete this task? This action cannot be undone.
+            confirm deletion. this operation is irreversible.
           </DialogDescription>
         </DialogHeader>
 
         {task && (
-          <div className="rounded-md bg-gray-50 p-3">
-            <p className="font-medium text-gray-900">{task.title}</p>
+          <div className="rounded-sm bg-muted/50 border border-border/60 p-3">
+            <p className="font-medium text-foreground text-sm">{task.title}</p>
             {task.description && (
-              <p className="mt-1 text-sm text-gray-500">{task.description}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{task.description}</p>
             )}
           </div>
         )}
@@ -90,10 +93,10 @@ export function DeleteTaskDialog({
         {/* Error message */}
         {error && (
           <div
-            className="rounded-md bg-red-50 p-3 text-sm text-red-600"
+            className="rounded-sm bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive animate-fade-in-up"
             role="alert"
           >
-            {error}
+            <span className="opacity-70 mr-1">[ERROR]</span> {error}
           </div>
         )}
 
@@ -104,7 +107,7 @@ export function DeleteTaskDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            cancel
           </Button>
           <Button
             type="button"
@@ -112,7 +115,7 @@ export function DeleteTaskDialog({
             onClick={handleDelete}
             disabled={isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? "deleting..." : "confirm_delete"}
           </Button>
         </DialogFooter>
       </DialogContent>

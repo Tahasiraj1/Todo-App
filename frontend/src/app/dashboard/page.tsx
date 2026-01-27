@@ -95,18 +95,21 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-white">
+      <header className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
-            Todo App
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="size-2 rounded-full bg-terminal animate-pulse-soft shadow-[0_0_8px_var(--terminal-glow)]" />
+            <h1 className="text-sm font-bold text-terminal uppercase tracking-widest">
+              <span className="text-terminal-dim">$</span> todo_app
+            </h1>
+          </div>
           <div className="flex items-center gap-2">
             <Link href="/chat">
               <Button variant="outline" size="sm" className="gap-2">
                 <MessageSquare className="size-4" />
-                <span className="hidden sm:inline">AI Chat</span>
+                <span className="hidden sm:inline">ai_chat</span>
               </Button>
             </Link>
             <SignOutButton />
@@ -119,23 +122,27 @@ export default function DashboardPage() {
         {/* Error banner */}
         {error && (
           <div
-            className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600"
+            className="mb-6 rounded-sm bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive animate-fade-in-up"
             role="alert"
           >
+            <span className="text-destructive/70 mr-2">[ERROR]</span>
             {error}
             <button
               onClick={loadTasks}
-              className="ml-2 font-medium underline hover:no-underline"
+              className="ml-2 font-medium text-terminal underline hover:no-underline hover:text-terminal-bright transition-colors"
             >
-              Retry
+              retry
             </button>
           </div>
         )}
 
         {/* Task creation form */}
-        <Card className="mb-6" ref={formRef}>
+        <Card className="mb-6 animate-fade-in-up" ref={formRef}>
           <CardHeader>
-            <CardTitle>Add New Task</CardTitle>
+            <CardTitle>
+              <span className="text-terminal-dim mr-2">&gt;</span>
+              new_task
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <TaskForm onTaskCreated={handleTaskCreated} />
@@ -143,13 +150,16 @@ export default function DashboardPage() {
         </Card>
 
         {/* Task list */}
-        <Card>
+        <Card className="animate-fade-in-up stagger-1">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Your Tasks</span>
+              <span>
+                <span className="text-terminal-dim mr-2">&gt;</span>
+                task_list
+              </span>
               {!isLoading && tasks.length > 0 && (
-                <span className="text-sm font-normal text-gray-500">
-                  {tasks.filter((t) => !t.completed).length} remaining
+                <span className="text-xs font-normal text-terminal-dim normal-case tracking-normal">
+                  [{tasks.filter((t) => !t.completed).length} pending]
                 </span>
               )}
             </CardTitle>

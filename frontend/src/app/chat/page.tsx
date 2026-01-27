@@ -66,21 +66,21 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b bg-white shrink-0">
+      <header className="border-b border-border/60 bg-card/50 backdrop-blur-sm shrink-0 sticky top-0 z-40">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center gap-2 text-terminal-dim hover:text-terminal transition-colors text-xs uppercase tracking-wider"
             >
               <ArrowLeft className="size-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+              <span className="hidden sm:inline">back</span>
             </Link>
-            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl flex items-center gap-2">
-              <MessageSquare className="size-6" />
-              AI Chat
+            <h1 className="text-sm font-bold text-terminal uppercase tracking-widest flex items-center gap-2">
+              <MessageSquare className="size-5" />
+              <span className="text-terminal-dim">$</span> ai_assistant
             </h1>
           </div>
           <SignOutButton />
@@ -90,42 +90,42 @@ export default function ChatPage() {
       {/* Main content */}
       <div className="flex-1 flex mx-auto max-w-6xl w-full overflow-hidden">
         {/* Sidebar - Conversation list */}
-        <aside className="w-64 border-r bg-white shrink-0 hidden md:flex flex-col">
-          <div className="p-4 border-b">
+        <aside className="w-64 border-r border-border/60 bg-card/30 shrink-0 hidden md:flex flex-col">
+          <div className="p-4 border-b border-border/60">
             <Button
               onClick={handleNewConversation}
               className="w-full"
               variant="outline"
             >
-              New Conversation
+              new_session
             </Button>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             {isLoadingConversations ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
-                Loading...
+              <div className="flex items-center justify-center py-8 text-terminal-dim text-xs uppercase tracking-wider animate-pulse-soft">
+                loading...
               </div>
             ) : conversations.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                No conversations yet
+              <div className="text-center py-8 text-terminal-dim text-xs uppercase tracking-wider">
+                [no_sessions]
               </div>
             ) : (
               <ul className="space-y-1">
-                {conversations.map((convo) => (
-                  <li key={convo.id}>
+                {conversations.map((convo, index) => (
+                  <li key={convo.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.05}s` }}>
                     <button
                       onClick={() => setSelectedConversationId(convo.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between group transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-sm text-xs flex items-center justify-between group transition-all duration-200 ${
                         selectedConversationId === convo.id
-                          ? "bg-primary/10 text-primary"
-                          : "hover:bg-gray-100"
+                          ? "bg-terminal/10 text-terminal border border-terminal/30 shadow-[0_0_10px_var(--terminal-glow)]"
+                          : "hover:bg-muted text-muted-foreground hover:text-foreground border border-transparent"
                       }`}
                     >
-                      <span className="truncate">
-                        Conversation #{convo.id}
+                      <span className="truncate uppercase tracking-wider">
+                        session_{convo.id}
                         {convo.message_count !== undefined && (
-                          <span className="text-xs text-muted-foreground ml-1">
-                            ({convo.message_count})
+                          <span className="text-[10px] text-terminal-dim ml-1 normal-case">
+                            [{convo.message_count}]
                           </span>
                         )}
                       </span>
@@ -134,7 +134,7 @@ export default function ChatPage() {
                           e.stopPropagation();
                           handleDeleteConversation(convo.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-opacity"
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded-sm transition-all duration-200"
                         title="Delete conversation"
                       >
                         <Trash2 className="size-3 text-destructive" />
@@ -148,7 +148,7 @@ export default function ChatPage() {
         </aside>
 
         {/* Main chat area */}
-        <main className="flex-1 flex flex-col bg-white overflow-hidden">
+        <main className="flex-1 flex flex-col bg-background overflow-hidden">
           <ChatInterface
             key={selectedConversationId ?? "new"}
             conversationId={selectedConversationId}

@@ -106,8 +106,8 @@ export function ChatInterface({
   return (
     <div className={cn("flex flex-col h-full", className)}>
       {error && (
-        <div className="px-4 py-2 bg-destructive/10 text-destructive text-sm text-center">
-          {error}
+        <div className="px-4 py-2 bg-destructive/10 border-b border-destructive/30 text-destructive text-xs text-center uppercase tracking-wider animate-fade-in-up">
+          <span className="opacity-70">[ERROR]</span> {error}
         </div>
       )}
 
@@ -116,7 +116,7 @@ export function ChatInterface({
       <ChatInput
         onSend={handleSendMessage}
         disabled={isLoading}
-        placeholder="Ask me to add tasks, show your list, or manage todos..."
+        placeholder="enter command or query..."
       />
     </div>
   );

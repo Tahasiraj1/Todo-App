@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { signOutUser } from "@/lib/auth";
 import { LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SignOutButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
@@ -45,10 +46,10 @@ export function SignOutButton({
       size={size}
       onClick={handleSignOut}
       disabled={isLoading}
-      className={className}
+      className={cn("text-xs", className)}
     >
       {showIcon && <LogOut className="mr-2 h-4 w-4" />}
-      {isLoading ? "Signing out..." : "Sign out"}
+      {isLoading ? "disconnecting..." : "logout"}
     </Button>
   );
 }

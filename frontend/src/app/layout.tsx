@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Todo App",
-  description: "Phase II - Todo Full-Stack Web Application",
+  title: "todo_app // terminal",
+  description: "Developer-focused task management system",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background selection:bg-terminal/30 selection:text-foreground`}
       >
         <div className="relative flex min-h-screen flex-col">
           <main className="flex-1">{children}</main>

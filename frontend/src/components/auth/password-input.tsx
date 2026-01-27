@@ -23,13 +23,13 @@ interface PasswordInputProps {
   required?: boolean;
 }
 
-const strengthLabels = ["Very Weak", "Weak", "Fair", "Strong", "Very Strong"];
+const strengthLabels = ["critical", "weak", "moderate", "secure", "fortified"];
 const strengthColors = [
-  "bg-red-500",
+  "bg-destructive",
   "bg-orange-500",
   "bg-yellow-500",
-  "bg-green-500",
-  "bg-green-600",
+  "bg-terminal",
+  "bg-terminal-bright",
 ];
 
 export function PasswordInput({
@@ -80,41 +80,43 @@ export function PasswordInput({
         disabled={disabled}
         required={required}
         className={
-          value && !isValid ? "border-red-500 focus-visible:ring-red-500" : ""
+          value && !isValid ? "border-destructive shadow-[0_0_10px_oklch(0.55_0.22_25/30%)]" : ""
         }
         aria-describedby={showStrength ? `${id}-strength` : undefined}
       />
 
       {showStrength && value && (
-        <div id={`${id}-strength`} className="space-y-1">
+        <div id={`${id}-strength`} className="space-y-2 animate-fade-in-up">
           {/* Strength meter */}
           <div className="flex gap-1">
             {[0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className={`h-1 flex-1 rounded ${
-                  i <= score ? strengthColors[score] : "bg-gray-200"
+                className={`h-1.5 flex-1 rounded-sm transition-all duration-300 ${
+                  i <= score
+                    ? `${strengthColors[score]} ${score >= 3 ? 'shadow-[0_0_8px_var(--terminal-glow)]' : ''}`
+                    : "bg-muted"
                 }`}
               />
             ))}
           </div>
 
           {/* Strength label */}
-          <div className="flex justify-between text-xs">
+          <div className="flex justify-between text-[10px] uppercase tracking-wider">
             <span
-              className={`${
-                isValid ? "text-green-600" : "text-red-600"
-              } font-medium`}
+              className={`font-medium ${
+                isValid ? "text-terminal" : "text-destructive"
+              }`}
             >
-              {strengthLabels[score]}
+              [{strengthLabels[score]}]
             </span>
-            {!isValid && <span className="text-gray-500">Minimum: Strong</span>}
+            {!isValid && <span className="text-terminal-dim">min: secure</span>}
           </div>
 
           {/* Feedback for improvement */}
           {feedback && (
-            <p className="text-xs text-red-600" role="alert">
-              {feedback}
+            <p className="text-xs text-destructive/80" role="alert">
+              <span className="opacity-70">[hint]</span> {feedback}
             </p>
           )}
         </div>

@@ -113,9 +113,12 @@ export function TaskEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
+          <DialogTitle>
+            <span className="text-terminal-dim mr-2">&gt;</span>
+            edit_task
+          </DialogTitle>
           <DialogDescription>
-            Make changes to your task details.
+            modify task parameters
           </DialogDescription>
         </DialogHeader>
 
@@ -124,16 +127,16 @@ export function TaskEditDialog({
             {/* Error message */}
             {error && (
               <div
-                className="rounded-md bg-red-50 p-3 text-sm text-red-600"
+                className="rounded-sm bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive animate-fade-in-up"
                 role="alert"
               >
-                {error}
+                <span className="opacity-70 mr-1">[ERROR]</span> {error}
               </div>
             )}
 
             {/* Title field */}
             <div className="space-y-2">
-              <Label htmlFor="edit-title">Title</Label>
+              <Label htmlFor="edit-title">title</Label>
               <Input
                 id="edit-title"
                 type="text"
@@ -143,33 +146,33 @@ export function TaskEditDialog({
                   if (titleError) validateTitle(e.target.value);
                 }}
                 onBlur={() => validateTitle(title)}
-                placeholder="Task title"
+                placeholder="task_title"
                 required
                 disabled={isLoading}
                 maxLength={200}
-                className={titleError ? "border-red-500" : ""}
+                className={titleError ? "border-destructive shadow-[0_0_10px_oklch(0.55_0.22_25/30%)]" : ""}
               />
               {titleError && (
-                <p className="text-xs text-red-600" role="alert">
-                  {titleError}
+                <p className="text-xs text-destructive animate-fade-in-up" role="alert">
+                  <span className="opacity-70">[!]</span> {titleError}
                 </p>
               )}
-              <p className="text-xs text-gray-500">{title.length}/200</p>
+              <p className="text-[10px] text-terminal-dim uppercase tracking-wider">{title.length}/200</p>
             </div>
 
             {/* Description field */}
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description (optional)</Label>
+              <Label htmlFor="edit-description">description <span className="normal-case text-muted-foreground/60">(optional)</span></Label>
               <Input
                 id="edit-description"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add details..."
+                placeholder="add details..."
                 disabled={isLoading}
                 maxLength={1000}
               />
-              <p className="text-xs text-gray-500">{description.length}/1000</p>
+              <p className="text-[10px] text-terminal-dim uppercase tracking-wider">{description.length}/1000</p>
             </div>
           </div>
 
@@ -180,10 +183,10 @@ export function TaskEditDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              cancel
             </Button>
             <Button type="submit" disabled={isLoading || !title.trim()}>
-              {isLoading ? "Saving..." : "Save changes"}
+              {isLoading ? "saving..." : "save"}
             </Button>
           </DialogFooter>
         </form>

@@ -59,8 +59,10 @@ export function TaskItem({
 
   return (
     <div
-      className={`group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-50 ${
-        task.completed ? "bg-gray-50 opacity-75" : "bg-white"
+      className={`group flex items-start gap-3 rounded-sm border p-4 transition-all duration-200 animate-slide-in ${
+        task.completed
+          ? "bg-muted/30 border-border/30 opacity-60"
+          : "bg-card/50 border-border/60 hover:border-terminal/40 hover:bg-card/80 hover:shadow-[0_0_15px_var(--terminal-glow)]"
       }`}
     >
       {/* Completion checkbox */}
@@ -77,17 +79,18 @@ export function TaskItem({
       {/* Task content */}
       <div className="flex-1 min-w-0">
         <h3
-          className={`font-medium ${
-            task.completed ? "text-gray-500 line-through" : "text-gray-900"
+          className={`font-medium text-sm tracking-wide ${
+            task.completed ? "text-muted-foreground line-through" : "text-foreground"
           }`}
         >
+          {task.completed && <span className="text-terminal-dim mr-2">[DONE]</span>}
           {task.title}
         </h3>
 
         {task.description && (
           <p
-            className={`mt-1 text-sm ${
-              task.completed ? "text-gray-400 line-through" : "text-gray-600"
+            className={`mt-1 text-xs tracking-wide ${
+              task.completed ? "text-muted-foreground/60 line-through" : "text-muted-foreground"
             }`}
           >
             {task.description}
@@ -95,29 +98,29 @@ export function TaskItem({
         )}
 
         {/* Timestamps */}
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
-          <span>Created: {formatDate(task.created_at)}</span>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-terminal-dim uppercase tracking-wider">
+          <span>created: {formatDate(task.created_at)}</span>
           {task.updated_at !== task.created_at && (
-            <span>Updated: {formatDate(task.updated_at)}</span>
+            <span>modified: {formatDate(task.updated_at)}</span>
           )}
         </div>
 
         {/* Error message */}
         {error && (
-          <p className="mt-2 text-xs text-red-600" role="alert">
-            {error}
+          <p className="mt-2 text-xs text-destructive" role="alert">
+            <span className="opacity-70">[ERROR]</span> {error}
           </p>
         )}
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+      <div className="flex gap-1 opacity-0 transition-all duration-200 group-hover:opacity-100 focus-within:opacity-100 translate-x-2 group-hover:translate-x-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onEditClick(task)}
           aria-label="Edit task"
-          className="h-8 w-8"
+          className="h-8 w-8 text-terminal-dim hover:text-terminal hover:bg-terminal/10"
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -127,7 +130,7 @@ export function TaskItem({
           size="icon"
           onClick={() => onDeleteClick(task)}
           aria-label="Delete task"
-          className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+          className="h-8 w-8 text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="h-4 w-4" />
         </Button>

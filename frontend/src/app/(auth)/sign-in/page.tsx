@@ -55,77 +55,93 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Welcome back
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your account
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 bg-background">
+      <div className="w-full max-w-md space-y-6 animate-fade-in-up">
+        {/* Terminal header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-2 text-terminal text-xs uppercase tracking-widest">
+            <span className="size-2 rounded-full bg-terminal animate-pulse-soft shadow-[0_0_8px_var(--terminal-glow)]" />
+            system_access
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {/* Error message */}
-            {error && (
-              <div
-                className="rounded-md bg-red-50 p-3 text-sm text-red-600"
-                role="alert"
-              >
-                {error}
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-center">
+              <span className="text-terminal-dim mr-2">&gt;</span>
+              auth_login
+            </CardTitle>
+            <CardDescription className="text-center">
+              enter credentials to continue
+            </CardDescription>
+          </CardHeader>
+
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              {/* Error message */}
+              {error && (
+                <div
+                  className="rounded-sm bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive animate-fade-in-up"
+                  role="alert"
+                >
+                  <span className="opacity-70 mr-1">[ERROR]</span> {error}
+                </div>
+              )}
+
+              {/* Email field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="user@domain.com"
+                  required
+                  disabled={isLoading}
+                  autoComplete="email"
+                />
               </div>
-            )}
 
-            {/* Email field */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                disabled={isLoading}
-                autoComplete="email"
-              />
-            </div>
+              {/* Password field */}
+              <div className="space-y-2">
+                <Label htmlFor="password">password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  disabled={isLoading}
+                  autoComplete="current-password"
+                />
+              </div>
+            </CardContent>
 
-            {/* Password field */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                disabled={isLoading}
-                autoComplete="current-password"
-              />
-            </div>
-          </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "authenticating..." : "login"}
+              </Button>
 
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
+              <p className="text-center text-xs text-muted-foreground tracking-wide">
+                no account?{" "}
+                <Link
+                  href="/sign-up"
+                  className="font-medium text-terminal hover:text-terminal-bright hover:underline transition-colors"
+                >
+                  register_user
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
 
-            <p className="text-center text-sm text-gray-600">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/sign-up"
-                className="font-medium text-primary hover:underline"
-              >
-                Create account
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+        {/* Decorative terminal prompt */}
+        <div className="text-center text-[10px] text-terminal-dim uppercase tracking-wider">
+          <span className="animate-terminal-blink">_</span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -36,20 +36,25 @@ export function MessageList({
       )}
     >
       {messages.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <div className="text-4xl mb-4">💬</div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Start a conversation
+        <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in-up">
+          <div className="relative mb-4">
+            <div className="text-4xl opacity-50">_</div>
+            <div className="absolute inset-0 blur-xl bg-terminal/20" />
+          </div>
+          <h3 className="text-sm font-semibold text-terminal uppercase tracking-wider mb-2">
+            <span className="text-terminal-dim">[</span>
+            awaiting_input
+            <span className="text-terminal-dim">]</span>
           </h3>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            Ask me to add tasks, show your task list, mark tasks complete, or
-            help manage your todos in any way.
+          <p className="text-xs text-muted-foreground max-w-sm tracking-wide">
+            manage tasks via natural language commands.
+            create, list, complete, or delete tasks.
           </p>
         </div>
       )}
 
-      {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} />
+      {messages.map((message, index) => (
+        <MessageBubble key={message.id} message={message} index={index} />
       ))}
 
       {isLoading && <TypingIndicator />}
@@ -61,26 +66,29 @@ export function MessageList({
 
 interface MessageBubbleProps {
   message: ChatMessage;
+  index?: number;
 }
 
-function MessageBubble({ message }: MessageBubbleProps) {
+function MessageBubble({ message, index = 0 }: MessageBubbleProps) {
   const isUser = message.role === "user";
 
   return (
     <div
       className={cn(
-        "flex",
+        "flex animate-fade-in-up",
         isUser ? "justify-end" : "justify-start"
       )}
+      style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div
         className={cn(
-          "px-4 py-3 max-w-[80%] rounded-2xl whitespace-pre-wrap",
+          "px-4 py-3 max-w-[80%] rounded-sm whitespace-pre-wrap text-sm tracking-wide transition-all duration-200",
           isUser
-            ? "bg-primary text-primary-foreground rounded-br-sm"
-            : "bg-muted text-foreground rounded-bl-sm"
+            ? "bg-terminal text-background rounded-br-none shadow-[0_0_15px_var(--terminal-glow)]"
+            : "bg-muted border border-border/60 text-foreground rounded-bl-none"
         )}
       >
+        {!isUser && <span className="text-terminal-dim text-xs mr-2">&gt;</span>}
         {message.content}
       </div>
     </div>
