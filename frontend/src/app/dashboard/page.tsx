@@ -1,12 +1,12 @@
-// [Task]: T046, T056, T089, T040 [From]: spec.md §US-002
+// [Task]: T046, T056, T089, T040, T029 [From]: spec.md §US-002
 "use client";
 
 /**
- * Dashboard page with task list and creation form.
- * Main authenticated user interface.
+ * Dashboard page with task list, creation form, and filters.
+ * Phase V: integrated task-filters for search, filter, and sort.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,14 +15,21 @@ import { TaskForm } from "@/components/tasks/task-form";
 import { TaskList } from "@/components/tasks/task-list";
 import { TaskEditDialog } from "@/components/tasks/task-edit-dialog";
 import { DeleteTaskDialog } from "@/components/tasks/delete-task-dialog";
+import { TaskFiltersBar, type TaskFilters } from "@/components/tasks/task-filters";
+import { ActivityLog } from "@/components/activity/activity-log";
+import { NotificationProvider } from "@/components/notifications/notification-provider";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { listTasks, ApiClientError } from "@/lib/api";
+import { getSession } from "@/lib/auth";
 import type { Task } from "@/types/task";
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showActivity, setShowActivity] = useState(false);
+  const [filters, setFilters] = useState<TaskFilters>({});
 
   // Edit dialog state
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -35,17 +42,19 @@ export default function DashboardPage() {
   // Ref to task form for focus
   const formRef = useRef<HTMLDivElement>(null);
 
-  // Load tasks on mount
-  useEffect(() => {
-    loadTasks();
-  }, []);
+  // Collect available tags from tasks for the filter dropdown
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    tasks.forEach((t) => t.tags?.forEach((tag) => tagSet.add(tag)));
+    return Array.from(tagSet).sort();
+  }, [tasks]);
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async (appliedFilters?: TaskFilters) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const fetchedTasks = await listTasks();
+      const fetchedTasks = await listTasks(appliedFilters || filters);
       setTasks(fetchedTasks);
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -56,7 +65,23 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters]);
+
+  // Load tasks and user on mount
+  useEffect(() => {
+    loadTasks();
+    getSession().then((s) => {
+      if (s.data?.user?.id) setUserId(s.data.user.id);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reload when filters change (debounced for search)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadTasks(filters);
+    }, filters.search ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle new task created
   const handleTaskCreated = (newTask: Task) => {
@@ -94,7 +119,14 @@ export default function DashboardPage() {
     input?.focus();
   };
 
+  // Handle real-time task updates from WebSocket
+  const handleRealtimeUpdate = useCallback((action: string, task: Record<string, unknown>) => {
+    // Reload the task list to get fresh data
+    loadTasks();
+  }, [loadTasks]);
+
   return (
+    <NotificationProvider userId={userId || ""} onTaskUpdate={handleRealtimeUpdate}>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -128,7 +160,7 @@ export default function DashboardPage() {
             <span className="text-destructive/70 mr-2">[ERROR]</span>
             {error}
             <button
-              onClick={loadTasks}
+              onClick={() => loadTasks()}
               className="ml-2 font-medium text-terminal underline hover:no-underline hover:text-terminal-bright transition-colors"
             >
               retry
@@ -149,7 +181,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Task list */}
+        {/* Task list with filters */}
         <Card className="animate-fade-in-up stagger-1">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -164,7 +196,15 @@ export default function DashboardPage() {
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Filters */}
+            <TaskFiltersBar
+              filters={filters}
+              onFiltersChange={setFilters}
+              availableTags={availableTags}
+            />
+
+            {/* Task list */}
             <TaskList
               tasks={tasks}
               isLoading={isLoading}
@@ -175,6 +215,31 @@ export default function DashboardPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Activity log */}
+        {userId && (
+          <Card className="mt-6 animate-fade-in-up stagger-2">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>
+                  <span className="text-terminal-dim mr-2">&gt;</span>
+                  activity_log
+                </span>
+                <button
+                  onClick={() => setShowActivity(!showActivity)}
+                  className="text-[10px] font-normal text-terminal-dim uppercase tracking-wider hover:text-terminal transition-colors"
+                >
+                  {showActivity ? "hide" : "show"}
+                </button>
+              </CardTitle>
+            </CardHeader>
+            {showActivity && (
+              <CardContent>
+                <ActivityLog userId={userId} />
+              </CardContent>
+            )}
+          </Card>
+        )}
 
         {/* Edit dialog */}
         <TaskEditDialog
@@ -193,5 +258,6 @@ export default function DashboardPage() {
         />
       </main>
     </div>
+    </NotificationProvider>
   );
 }

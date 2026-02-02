@@ -1,0 +1,182 @@
+# Helm Values Schema Extensions for Phase V
+# New values that extend the existing values.yaml for Oracle OKE deployment,
+# Dapr sidecar injection, Kafka (Strimzi), and new microservices.
+
+# ─────────────────────────────────────────────────────
+# New top-level keys added to values.yaml
+# ─────────────────────────────────────────────────────
+
+# Cloud provider configuration
+cloud:
+  provider: "oracle"                     # oracle | azure | gcp
+  registry: "<region>.ocir.io/<tenancy>" # Container registry prefix
+
+# Dapr configuration
+dapr:
+  enabled: true
+  version: "1.14"
+  annotations:
+    backend:
+      dapr.io/enabled: "true"
+      dapr.io/app-id: "todo-backend"
+      dapr.io/app-port: "8000"
+      dapr.io/log-level: "info"
+    notificationService:
+      dapr.io/enabled: "true"
+      dapr.io/app-id: "notification-service"
+      dapr.io/app-port: "8001"
+      dapr.io/log-level: "info"
+    recurringTaskService:
+      dapr.io/enabled: "true"
+      dapr.io/app-id: "recurring-task-service"
+      dapr.io/app-port: "8002"
+      dapr.io/log-level: "info"
+
+# Kafka (Strimzi) configuration
+kafka:
+  enabled: true
+  namespace: "kafka"
+  replicas: 1
+  storage:
+    type: "ephemeral"             # ephemeral for free tier; persistent for production
+  listeners:
+    - name: plain
+      port: 9092
+      type: internal
+  topics:
+    - name: "task-events"
+      partitions: 3
+      replicas: 1
+      retention: "168h"           # 7 days
+    - name: "reminders"
+      partitions: 1
+      replicas: 1
+      retention: "24h"
+    - name: "task-updates"
+      partitions: 3
+      replicas: 1
+      retention: "1h"
+
+# Notification service
+notificationService:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "notification-service"
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8001
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Recurring task service
+recurringTaskService:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "recurring-task-service"
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8002
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Ingress (for cloud deployment)
+ingress:
+  enabled: false                  # true for cloud, false for minikube NodePort
+  className: "nginx"
+  host: ""                        # Set in values-oke.yaml
+  tls:
+    enabled: false
+    secretName: ""
+
+# ─────────────────────────────────────────────────────
+# Modified existing keys
+# ─────────────────────────────────────────────────────
+
+# Backend additions to existing backend section
+backend:
+  # Existing fields remain (replicaCount, image, service, resources, env, probes)
+  # New env vars added:
+  env:
+    DAPR_HTTP_PORT: "3500"        # Dapr sidecar port
+    KAFKA_PUBSUB_NAME: "kafka-pubsub"
+    REMINDER_WINDOW_MINUTES: "30"
+
+# ─────────────────────────────────────────────────────
+# New values file: values-oke.yaml (Oracle OKE overrides)
+# ─────────────────────────────────────────────────────
+
+# values-oke.yaml structure:
+#
+# cloud:
+#   provider: "oracle"
+#   registry: "<region>.ocir.io/<tenancy>/todo-app"
+#
+# frontend:
+#   image:
+#     repository: "<region>.ocir.io/<tenancy>/todo-app/todo-frontend"
+#   service:
+#     type: ClusterIP  # Behind ingress, not NodePort
+#   resources:
+#     requests: { memory: "128Mi", cpu: "50m" }
+#     limits:   { memory: "256Mi", cpu: "200m" }
+#
+# backend:
+#   image:
+#     repository: "<region>.ocir.io/<tenancy>/todo-app/todo-backend"
+#   service:
+#     type: ClusterIP
+#   resources:
+#     requests: { memory: "128Mi", cpu: "100m" }
+#     limits:   { memory: "384Mi", cpu: "300m" }
+#
+# notificationService:
+#   image:
+#     repository: "<region>.ocir.io/<tenancy>/todo-app/notification-service"
+#   resources:
+#     requests: { memory: "64Mi", cpu: "50m" }
+#     limits:   { memory: "128Mi", cpu: "100m" }
+#
+# recurringTaskService:
+#   image:
+#     repository: "<region>.ocir.io/<tenancy>/todo-app/recurring-task-service"
+#   resources:
+#     requests: { memory: "64Mi", cpu: "50m" }
+#     limits:   { memory: "128Mi", cpu: "100m" }
+#
+# kafka:
+#   resources:
+#     requests: { memory: "512Mi", cpu: "200m" }
+#     limits:   { memory: "1Gi",   cpu: "500m" }
+#
+# ingress:
+#   enabled: true
+#   className: "nginx"
+#   host: "todo.example.com"
+#
+# # Resource budget (4 OCPUs, 24GB RAM):
+# # Frontend:            ~200m CPU, ~256Mi RAM
+# # Backend:             ~300m CPU, ~384Mi RAM
+# # Notification:        ~100m CPU, ~128Mi RAM
+# # Recurring Task:      ~100m CPU, ~128Mi RAM
+# # Kafka (Strimzi):     ~500m CPU, ~1Gi RAM
+# # Dapr control plane:  ~300m CPU, ~512Mi RAM
+# # Ingress controller:  ~200m CPU, ~256Mi RAM
+# # System/kube-system:  ~500m CPU, ~1Gi RAM
+# # ─────────────────────────────────────
+# # Total estimates:     ~2200m CPU, ~3.7Gi RAM
+# # Available:            4000m CPU, 24Gi RAM
+# # Headroom:             ~45% CPU,  ~85% RAM  ✓ fits comfortably

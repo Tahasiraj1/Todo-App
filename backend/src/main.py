@@ -6,6 +6,7 @@ Configures CORS, routes, and error handling.
 
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -18,12 +19,28 @@ load_dotenv()
 from .db import create_db_and_tables
 from .middleware.error_handler import setup_error_handlers
 from .api.routes import router as api_router
+from .models.activity_log import ActivityLogEntry  # noqa: F401 — register for table creation
+from .services.websocket_manager import ws_manager
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO if os.getenv("DEBUG", "false").lower() != "true" else logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+# Configure structured JSON logging for production observability
+_log_level = logging.DEBUG if os.getenv("DEBUG", "false").lower() == "true" else logging.INFO
+
+if os.getenv("LOG_FORMAT", "json").lower() == "json":
+    from pythonjsonlogger import jsonlogger
+
+    _handler = logging.StreamHandler(sys.stdout)
+    _handler.setFormatter(jsonlogger.JsonFormatter(
+        fmt="%(asctime)s %(name)s %(levelname)s %(message)s",
+        rename_fields={"asctime": "timestamp", "levelname": "level"},
+    ))
+    logging.root.handlers = [_handler]
+    logging.root.setLevel(_log_level)
+else:
+    logging.basicConfig(
+        level=_log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
 logger = logging.getLogger(__name__)
 
 
@@ -69,3 +86,16 @@ app.include_router(api_router, prefix="/api")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.post("/api/internal/ws-broadcast")
+async def ws_broadcast(request_data: dict):
+    """
+    Internal endpoint for notification service to broadcast WebSocket messages.
+    Not exposed externally — called via Dapr service invocation or direct HTTP.
+    """
+    user_id = request_data.get("user_id", "")
+    message = request_data.get("message", {})
+    if user_id and message:
+        await ws_manager.broadcast_to_user(user_id, message)
+    return {"status": "ok"}

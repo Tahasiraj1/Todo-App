@@ -1,0 +1,322 @@
+# API Contract Extensions for Phase V
+# These extend the existing REST API with new parameters and endpoints.
+# Existing endpoints (tasks CRUD, chat, conversations) remain unchanged unless noted.
+
+openapi: "3.1.0"
+info:
+  title: "Todo App API — Phase V Extensions"
+  version: "2.0.0"
+  description: "New and modified endpoints for Phase V features"
+
+# ─────────────────────────────────────────────────────
+# MODIFIED ENDPOINTS (existing, with new parameters)
+# ─────────────────────────────────────────────────────
+
+paths:
+  /api/{user_id}/tasks:
+    get:
+      summary: "List tasks (extended with filter, sort, search)"
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [all, pending, completed], default: all }
+        - name: priority
+          in: query
+          required: false
+          description: "Filter by priority level"
+          schema: { type: string, enum: [high, medium, low] }
+        - name: tag
+          in: query
+          required: false
+          description: "Filter by tag (exact match)"
+          schema: { type: string }
+        - name: search
+          in: query
+          required: false
+          description: "Keyword search across title and description"
+          schema: { type: string, maxLength: 200 }
+        - name: sort_by
+          in: query
+          required: false
+          description: "Sort field"
+          schema: { type: string, enum: [due_date, priority, title, created_at], default: created_at }
+        - name: sort_order
+          in: query
+          required: false
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: overdue
+          in: query
+          required: false
+          description: "Filter to overdue tasks only"
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: "Filtered and sorted task list"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items: { $ref: "#/components/schemas/TaskResponse" }
+
+    post:
+      summary: "Create task (extended with priority, tags, due_date, recurrence)"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskCreate" }
+
+  /api/{user_id}/tasks/{task_id}:
+    put:
+      summary: "Update task (extended with priority, tags, due_date, recurrence)"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskUpdate" }
+
+  # ─────────────────────────────────────────────────────
+  # NEW ENDPOINTS
+  # ─────────────────────────────────────────────────────
+
+  /api/{user_id}/activity:
+    get:
+      summary: "Get user activity log"
+      description: "Returns recent activity entries (max 90 days)"
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: offset
+          in: query
+          required: false
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items: { $ref: "#/components/schemas/ActivityLogEntry" }
+                  total:
+                    type: integer
+
+  /api/ws/{user_id}:
+    get:
+      summary: "WebSocket endpoint for real-time updates and reminders"
+      description: >
+        Upgrade to WebSocket. Server sends JSON messages for:
+        - Task updates (create, update, complete, delete)
+        - Reminder notifications
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string }
+
+  # ─────────────────────────────────────────────────────
+  # DAPR INTEGRATION ENDPOINTS (internal, called by Dapr sidecar)
+  # ─────────────────────────────────────────────────────
+
+  /api/events/task-events:
+    post:
+      summary: "[Internal] Dapr subscription handler for task-events topic"
+      description: "Called by Dapr sidecar when a task event is published. Persists to activity log."
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CloudEvent" }
+      responses:
+        "200":
+          description: "Event processed"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [SUCCESS, RETRY, DROP] }
+
+  /api/jobs/{job_name}:
+    post:
+      summary: "[Internal] Dapr Jobs callback for scheduled reminders"
+      description: "Called by Dapr at the scheduled reminder time"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    task_id: { type: integer }
+                    user_id: { type: string }
+                    type: { type: string, enum: [reminder] }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+
+components:
+  schemas:
+    TaskCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+        priority:
+          type: string
+          enum: [high, medium, low]
+          default: medium
+        tags:
+          type: array
+          items: { type: string, maxLength: 50 }
+          maxItems: 10
+          default: []
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_recurring:
+          type: boolean
+          default: false
+        recurrence_frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+          nullable: true
+        recurrence_interval:
+          type: integer
+          minimum: 1
+          default: 1
+        recurrence_day_of_week:
+          type: integer
+          minimum: 0
+          maximum: 6
+          nullable: true
+        recurrence_day_of_month:
+          type: integer
+          minimum: 1
+          maximum: 31
+          nullable: true
+        recurrence_end_date:
+          type: string
+          format: date-time
+          nullable: true
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+        priority:
+          type: string
+          enum: [high, medium, low]
+        tags:
+          type: array
+          items: { type: string, maxLength: 50 }
+          maxItems: 10
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_recurring:
+          type: boolean
+        recurrence_frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+          nullable: true
+        recurrence_interval:
+          type: integer
+          minimum: 1
+        recurrence_day_of_week:
+          type: integer
+          minimum: 0
+          maximum: 6
+          nullable: true
+        recurrence_day_of_month:
+          type: integer
+          minimum: 1
+          maximum: 31
+          nullable: true
+        recurrence_end_date:
+          type: string
+          format: date-time
+          nullable: true
+
+    TaskResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        completed: { type: boolean }
+        priority: { type: string, enum: [high, medium, low] }
+        tags: { type: array, items: { type: string } }
+        due_date: { type: string, format: date-time, nullable: true }
+        is_overdue: { type: boolean }
+        is_recurring: { type: boolean }
+        recurrence_frequency: { type: string, nullable: true }
+        recurrence_interval: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ActivityLogEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: string }
+        task_id: { type: integer }
+        event_type: { type: string, enum: [created, updated, completed, deleted] }
+        task_title: { type: string }
+        task_data: { type: object }
+        created_at: { type: string, format: date-time }
+
+    CloudEvent:
+      type: object
+      properties:
+        id: { type: string }
+        specversion: { type: string }
+        type: { type: string }
+        source: { type: string }
+        time: { type: string, format: date-time }
+        data: { type: object }
+
+    WebSocketMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [task_update, reminder]
+        payload:
+          type: object
+          description: "TaskResponse for task_update, ReminderEvent for reminder"

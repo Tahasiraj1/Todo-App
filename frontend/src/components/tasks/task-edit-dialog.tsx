@@ -1,9 +1,9 @@
-// [Task]: T061, T064, T065, T066 [From]: spec.md §FR-009
+// [Task]: T061, T064, T065, T066, T023 [From]: spec.md §FR-009
 "use client";
 
 /**
  * Task edit dialog component using shadcn/ui Dialog.
- * Pre-fills form with existing task data.
+ * Phase V: priority selector and tag editing support.
  */
 
 import { useState, useEffect } from "react";
@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { updateTask, ApiClientError } from "@/lib/api";
-import type { Task } from "@/types/task";
+import type { Task, TaskPriority } from "@/types/task";
 
 interface TaskEditDialogProps {
   task: Task | null;
@@ -36,6 +36,9 @@ export function TaskEditDialog({
 }: TaskEditDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -45,6 +48,9 @@ export function TaskEditDialog({
     if (task) {
       setTitle(task.title);
       setDescription(task.description || "");
+      setPriority(task.priority || "medium");
+      setTags(task.tags || []);
+      setTagInput("");
       setError(null);
       setTitleError(null);
     }
@@ -61,6 +67,25 @@ export function TaskEditDialog({
     }
     setTitleError(null);
     return true;
+  };
+
+  const handleAddTag = () => {
+    const tag = tagInput.trim().toLowerCase();
+    if (tag && !tags.includes(tag) && tags.length < 10 && tag.length <= 50) {
+      setTags([...tags, tag]);
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,6 +110,8 @@ export function TaskEditDialog({
       const updatedTask = await updateTask(task.id, {
         title: title.trim(),
         description: description.trim() || null,
+        priority,
+        tags,
       });
 
       onTaskUpdated(updatedTask);
@@ -108,6 +135,12 @@ export function TaskEditDialog({
       setIsLoading(false);
     }
   };
+
+  const priorityOptions: { value: TaskPriority; label: string; color: string }[] = [
+    { value: "high", label: "HIGH", color: "text-red-400 border-red-400/40 bg-red-400/10 hover:bg-red-400/20" },
+    { value: "medium", label: "MED", color: "text-yellow-400 border-yellow-400/40 bg-yellow-400/10 hover:bg-yellow-400/20" },
+    { value: "low", label: "LOW", color: "text-green-400 border-green-400/40 bg-green-400/10 hover:bg-green-400/20" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -173,6 +206,74 @@ export function TaskEditDialog({
                 maxLength={1000}
               />
               <p className="text-[10px] text-terminal-dim uppercase tracking-wider">{description.length}/1000</p>
+            </div>
+
+            {/* Priority selector */}
+            <div className="space-y-2">
+              <Label>priority</Label>
+              <div className="flex gap-2">
+                {priorityOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPriority(opt.value)}
+                    className={`rounded-sm border px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-widest transition-all ${
+                      priority === opt.value
+                        ? opt.color + " ring-1 ring-current"
+                        : "text-muted-foreground border-border/40 bg-transparent hover:border-border"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tag editing */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-tags">tags <span className="normal-case text-muted-foreground/60">({tags.length}/10)</span></Label>
+              <div className="flex gap-2">
+                <Input
+                  id="edit-tags"
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="add tag and press enter..."
+                  disabled={isLoading || tags.length >= 10}
+                  maxLength={50}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddTag}
+                  disabled={!tagInput.trim() || tags.length >= 10}
+                >
+                  +tag
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-sm border border-terminal/30 bg-terminal/5 px-1.5 py-0.5 text-[9px] font-mono text-terminal-dim tracking-wider"
+                    >
+                      #{tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-terminal-dim/60 hover:text-destructive ml-0.5"
+                        aria-label={`Remove tag ${tag}`}
+                      >
+                        x
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

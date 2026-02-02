@@ -1,0 +1,103 @@
+# [Task]: T040 [From]: plan.md §Phase D, spec.md US8
+# Oracle OKE overrides — ARM64 A1 shapes, always-free tier
+# Usage: helm upgrade --install todo-chatbot ./k8s/helm/todo-chatbot -f k8s/helm/todo-chatbot/values-oke.yaml
+
+global:
+  namespace: todo-app
+
+# Enable Dapr and Kafka on cloud
+dapr:
+  enabled: true
+
+kafka:
+  enabled: true
+  brokers: "taskflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: <region>.ocir.io/<tenancy>/todo-frontend
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      memory: "192Mi"
+      cpu: "100m"
+    limits:
+      memory: "384Mi"
+      cpu: "400m"
+
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: <region>.ocir.io/<tenancy>/todo-backend
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      memory: "192Mi"
+      cpu: "100m"
+    limits:
+      memory: "384Mi"
+      cpu: "400m"
+  env:
+    LOG_LEVEL: "info"
+    CORS_ORIGINS: "*"
+    PORT: "8000"
+    DAPR_ENABLED: "true"
+
+notification:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: <region>.ocir.io/<tenancy>/todo-notification
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: "96Mi"
+      cpu: "50m"
+    limits:
+      memory: "192Mi"
+      cpu: "200m"
+
+recurringTask:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: <region>.ocir.io/<tenancy>/todo-recurring-task
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: "96Mi"
+      cpu: "50m"
+    limits:
+      memory: "192Mi"
+      cpu: "200m"
+
+# Ingress for external access
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: todo.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /health
+          pathType: Prefix
+          service: backend
+  tls: []

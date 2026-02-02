@@ -1,0 +1,24 @@
+{{/*
+[Task]: T044 [From]: plan.md §Phase D
+Recurring Task Service - Kubernetes Service
+*/}}
+{{- if .Values.recurringTask.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-recurring-task
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: recurring-task
+spec:
+  type: {{ .Values.recurringTask.service.type }}
+  ports:
+    - port: {{ .Values.recurringTask.service.port }}
+      targetPort: {{ .Values.recurringTask.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: todo-recurring-task
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

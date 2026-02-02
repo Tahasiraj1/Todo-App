@@ -1,0 +1,58 @@
+# [Task]: T033 [From]: contracts/dapr-components.yaml §2-5
+# Dapr declarative subscription CRDs for all 3 topics
+---
+# task-events → backend (activity log handler)
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: task-events-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-events
+  routes:
+    default: /api/events/task-events
+  scopes:
+    - todo-backend
+---
+# task-events → recurring task service
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: task-events-recurring-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-events
+  routes:
+    default: /api/events/task-completed
+  scopes:
+    - recurring-task-service
+---
+# reminders → notification service
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: reminders-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: reminders
+  routes:
+    default: /api/events/reminders
+  scopes:
+    - notification-service
+---
+# task-updates → notification service (real-time sync via WebSocket)
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: task-updates-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-updates
+  routes:
+    default: /api/events/task-updates
+  scopes:
+    - notification-service

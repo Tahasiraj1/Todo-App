@@ -1,0 +1,66 @@
+{{/*
+[Task]: T041 [From]: plan.md §Phase D, spec.md US8
+Notification Service Deployment with Dapr sidecar annotations
+*/}}
+{{- if .Values.notification.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-notification
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: notification
+spec:
+  replicas: {{ .Values.notification.replicaCount }}
+  selector:
+    matchLabels:
+      app: todo-notification
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      {{- if .Values.dapr.enabled }}
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: {{ .Values.notification.dapr.appId | quote }}
+        dapr.io/app-port: {{ .Values.notification.dapr.appPort | quote }}
+        dapr.io/app-protocol: {{ .Values.notification.dapr.appProtocol | quote }}
+        dapr.io/enable-api-logging: {{ .Values.notification.dapr.enableApiLogging | quote }}
+      {{- end }}
+      labels:
+        app: todo-notification
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: notification
+          image: "{{ .Values.notification.image.repository }}:{{ .Values.notification.image.tag }}"
+          imagePullPolicy: {{ .Values.notification.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.notification.service.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.notification.service.port | quote }}
+            - name: BACKEND_URL
+              value: "http://todo-backend:{{ .Values.backend.service.port }}"
+          resources:
+            {{- toYaml .Values.notification.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.notification.probes.liveness.path }}
+              port: {{ .Values.notification.service.port }}
+            initialDelaySeconds: {{ .Values.notification.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.notification.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.notification.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.notification.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.notification.probes.readiness.path }}
+              port: {{ .Values.notification.service.port }}
+            initialDelaySeconds: {{ .Values.notification.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.notification.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.notification.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.notification.probes.readiness.failureThreshold }}
+      restartPolicy: Always
+{{- end }}

@@ -1,11 +1,14 @@
-# [Task]: T042, T043, T044, T045, T058, T059, T060, T070, T071, T079, T080 [From]: contracts/api-endpoints.md
+# [Task]: T042, T043, T044, T045, T058, T059, T060, T070, T071, T079, T080, T024 [From]: contracts/api-endpoints.md
 """
 Task API routes.
 All endpoints require JWT authentication and validate user_id from URL matches JWT.
 Endpoint pattern: /api/{user_id}/tasks (per hackathon requirements)
+Phase V: filter, sort, search query parameters on list endpoint.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from ..dependencies import CurrentUserId, DbSession
 from ...models.schemas import (
@@ -44,20 +47,42 @@ async def list_tasks(
     user_id: str,
     session: DbSession,
     jwt_user_id: CurrentUserId,
+    status: Optional[str] = Query(None, enum=["all", "pending", "completed"]),
+    priority: Optional[str] = Query(None, enum=["high", "medium", "low"]),
+    tag: Optional[str] = Query(None),
+    search: Optional[str] = Query(None, max_length=200),
+    sort_by: str = Query("created_at", enum=["due_date", "priority", "title", "created_at"]),
+    sort_order: str = Query("desc", enum=["asc", "desc"]),
+    overdue: Optional[bool] = Query(None),
 ) -> TaskListResponse:
     """
-    List all tasks for the authenticated user.
+    List tasks for the authenticated user with optional filtering, sorting, and search.
     GET /api/{user_id}/tasks
 
     Args:
         user_id: User ID from URL path (must match JWT token)
+        status: Filter by status (all/pending/completed)
+        priority: Filter by priority (high/medium/low)
+        tag: Filter by tag (exact match)
+        search: Keyword search across title and description
+        sort_by: Sort field (due_date/priority/title/created_at)
+        sort_order: Sort direction (asc/desc)
+        overdue: Filter to overdue tasks only
 
     Returns:
-        TaskListResponse: List of tasks belonging to the user
+        TaskListResponse: Filtered and sorted list of tasks
     """
     validate_user_id(user_id, jwt_user_id)
     service = TaskService(session, user_id)
-    tasks = service.list_tasks()
+    tasks = service.list_tasks(
+        status=status if status and status != "all" else None,
+        priority=priority,
+        tag=tag,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        overdue=overdue,
+    )
     return TaskListResponse(tasks=[TaskResponse.model_validate(t) for t in tasks])
 
 

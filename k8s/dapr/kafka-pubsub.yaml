@@ -1,0 +1,19 @@
+# [Task]: T032 [From]: contracts/dapr-components.yaml §1
+# Dapr Kafka pub/sub component — points to Strimzi broker
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "taskflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+    - name: consumerGroup
+      value: "todo-backend"
+    - name: authRequired
+      value: "false"
+    - name: maxMessageBytes
+      value: "1048576"

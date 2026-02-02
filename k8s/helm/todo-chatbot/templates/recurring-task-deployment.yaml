@@ -1,0 +1,66 @@
+{{/*
+[Task]: T043 [From]: plan.md §Phase D, spec.md US8
+Recurring Task Service Deployment with Dapr sidecar annotations
+*/}}
+{{- if .Values.recurringTask.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-recurring-task
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: recurring-task
+spec:
+  replicas: {{ .Values.recurringTask.replicaCount }}
+  selector:
+    matchLabels:
+      app: todo-recurring-task
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      {{- if .Values.dapr.enabled }}
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: {{ .Values.recurringTask.dapr.appId | quote }}
+        dapr.io/app-port: {{ .Values.recurringTask.dapr.appPort | quote }}
+        dapr.io/app-protocol: {{ .Values.recurringTask.dapr.appProtocol | quote }}
+        dapr.io/enable-api-logging: {{ .Values.recurringTask.dapr.enableApiLogging | quote }}
+      {{- end }}
+      labels:
+        app: todo-recurring-task
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: recurring-task
+          image: "{{ .Values.recurringTask.image.repository }}:{{ .Values.recurringTask.image.tag }}"
+          imagePullPolicy: {{ .Values.recurringTask.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.recurringTask.service.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.recurringTask.service.port | quote }}
+            - name: BACKEND_APP_ID
+              value: "todo-backend"
+          resources:
+            {{- toYaml .Values.recurringTask.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.recurringTask.probes.liveness.path }}
+              port: {{ .Values.recurringTask.service.port }}
+            initialDelaySeconds: {{ .Values.recurringTask.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.recurringTask.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.recurringTask.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.recurringTask.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.recurringTask.probes.readiness.path }}
+              port: {{ .Values.recurringTask.service.port }}
+            initialDelaySeconds: {{ .Values.recurringTask.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.recurringTask.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.recurringTask.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.recurringTask.probes.readiness.failureThreshold }}
+      restartPolicy: Always
+{{- end }}

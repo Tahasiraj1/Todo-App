@@ -1,7 +1,9 @@
 # [Task]: T013, T014, T015, T008 [From]: data-model.md
 """Models package - exports all SQLModel and Pydantic schemas."""
 
+from .activity_log import ActivityLogEntry
 from .conversation import Conversation
+from .events import CloudEvent, ReminderEventData, TaskEventData, TaskUpdateEventData
 from .message import Message, MessageRole
 from .schemas import (
     ChatMessageResponse,
@@ -23,6 +25,7 @@ __all__ = [
     # Database models
     "User",
     "Task",
+    "ActivityLogEntry",
     "Conversation",
     "Message",
     "MessageRole",
@@ -31,6 +34,11 @@ __all__ = [
     "TaskUpdate",
     "TaskResponse",
     "TaskListResponse",
+    # Event schemas
+    "CloudEvent",
+    "TaskEventData",
+    "ReminderEventData",
+    "TaskUpdateEventData",
     # Chat schemas
     "ChatRequest",
     "ChatResponse",

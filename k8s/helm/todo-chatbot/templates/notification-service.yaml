@@ -1,0 +1,24 @@
+{{/*
+[Task]: T042 [From]: plan.md §Phase D
+Notification Service - Kubernetes Service
+*/}}
+{{- if .Values.notification.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-notification
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: notification
+spec:
+  type: {{ .Values.notification.service.type }}
+  ports:
+    - port: {{ .Values.notification.service.port }}
+      targetPort: {{ .Values.notification.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: todo-notification
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

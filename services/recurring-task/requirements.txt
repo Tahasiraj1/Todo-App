@@ -1,0 +1,16 @@
+# [Task]: T003 [From]: plan.md §Project Structure
+# Recurring task service dependencies
+
+# Web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# HTTP client for Dapr API calls
+httpx>=0.26.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# Structured logging
+python-json-logger>=2.0.0

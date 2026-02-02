@@ -1,7 +1,11 @@
-// [Task]: T024 [From]: data-model.md, contracts/api-endpoints.md
+// [Task]: T024, T012 [From]: data-model.md, contracts/api-endpoints.md
 /**
  * TypeScript types for Task entity and API responses.
+ * Phase V extensions: priority, tags, due_date, recurrence fields.
  */
+
+export type TaskPriority = "high" | "medium" | "low";
+export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
 
 /**
  * Task entity as returned from the API.
@@ -12,6 +16,16 @@ export interface Task {
   title: string;
   description: string | null;
   completed: boolean;
+  priority: TaskPriority;
+  tags: string[];
+  due_date: string | null;
+  is_overdue: boolean;
+  is_recurring: boolean;
+  recurrence_frequency: RecurrenceFrequency | null;
+  recurrence_interval: number;
+  recurrence_day_of_week: number | null;
+  recurrence_day_of_month: number | null;
+  recurrence_end_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +36,15 @@ export interface Task {
 export interface TaskCreate {
   title: string;
   description?: string | null;
+  priority?: TaskPriority;
+  tags?: string[];
+  due_date?: string | null;
+  is_recurring?: boolean;
+  recurrence_frequency?: RecurrenceFrequency | null;
+  recurrence_interval?: number;
+  recurrence_day_of_week?: number | null;
+  recurrence_day_of_month?: number | null;
+  recurrence_end_date?: string | null;
 }
 
 /**
@@ -30,6 +53,15 @@ export interface TaskCreate {
 export interface TaskUpdate {
   title?: string;
   description?: string | null;
+  priority?: TaskPriority;
+  tags?: string[];
+  due_date?: string | null;
+  is_recurring?: boolean;
+  recurrence_frequency?: RecurrenceFrequency | null;
+  recurrence_interval?: number;
+  recurrence_day_of_week?: number | null;
+  recurrence_day_of_month?: number | null;
+  recurrence_end_date?: string | null;
 }
 
 /**

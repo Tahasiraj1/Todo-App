@@ -106,12 +106,35 @@ async function fetchWithAuth<T>(
 // ============================================================================
 
 /**
- * List all tasks for the authenticated user.
+ * Query parameters for listing tasks with filtering, sorting, and search.
+ */
+export interface ListTasksParams {
+  status?: string;
+  priority?: string;
+  tag?: string;
+  search?: string;
+  sort_by?: string;
+  sort_order?: string;
+  overdue?: boolean;
+}
+
+/**
+ * List tasks for the authenticated user with optional filtering, sorting, and search.
  * GET /api/{user_id}/tasks
  */
-export async function listTasks(): Promise<Task[]> {
+export async function listTasks(params?: ListTasksParams): Promise<Task[]> {
   const userId = await getCurrentUserId();
-  const response = await fetchWithAuth<TaskListResponse>(`/api/${userId}/tasks`);
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "" && value !== null) {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  const url = `/api/${userId}/tasks${query ? `?${query}` : ""}`;
+  const response = await fetchWithAuth<TaskListResponse>(url);
   return response.tasks;
 }
 
@@ -171,4 +194,40 @@ export async function toggleTaskCompletion(taskId: number): Promise<Task> {
   return fetchWithAuth<Task>(`/api/${userId}/tasks/${taskId}/complete`, {
     method: "PATCH",
   });
+}
+
+// ============================================================================
+// Activity Log API Functions (Phase V)
+// ============================================================================
+
+export interface ActivityEntry {
+  id: number;
+  user_id: string;
+  task_id: number;
+  event_type: string;
+  task_title: string;
+  task_data: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ActivityResponse {
+  entries: ActivityEntry[];
+  total: number;
+}
+
+/**
+ * Get activity log entries for a user.
+ * GET /api/{user_id}/activity
+ */
+export async function getActivity(
+  userId?: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<ActivityResponse> {
+  const uid = userId || (await getCurrentUserId());
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  return fetchWithAuth<ActivityResponse>(`/api/${uid}/activity?${params}`);
 }
