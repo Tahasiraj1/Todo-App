@@ -1,0 +1,22 @@
+{{/*
+[Task]: T052 [From]: spec.md FR-007, data-model.md §5
+Backend Service - ClusterIP for internal access only
+*/}}
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.backend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.backend.service.type }}
+  selector:
+    {{- include "todo-chatbot.backend.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.backend.service.port }}
+      targetPort: 8000
+      protocol: TCP
+{{- end }}

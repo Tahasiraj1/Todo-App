@@ -1,0 +1,45 @@
+# [Task]: T043 [From]: spec.md FR-014, research.md §7
+# Minikube-specific values for local development
+# Usage: helm install todo-chatbot ./k8s/helm/todo-chatbot -f ./k8s/helm/todo-chatbot/values-minikube.yaml
+
+# Global configuration
+global:
+  namespace: todo-app
+
+# Frontend - reduced resources for local dev
+frontend:
+  replicaCount: 1
+  image:
+    repository: todo-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+# Backend - reduced resources for local dev
+backend:
+  replicaCount: 1
+  image:
+    repository: todo-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+# Secrets - create from values
+secrets:
+  create: true
+  # Provide these at install time:
+  # --set secrets.databaseUrl="postgresql://..."
+  # --set secrets.openaiApiKey="sk-..."
+  # --set secrets.betterAuthSecret="..."

@@ -1,0 +1,10 @@
+{{/*
+[Task]: T045 [From]: spec.md FR-006, data-model.md §1
+Namespace for Todo Chatbot application
+*/}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.labels" . | nindent 4 }}

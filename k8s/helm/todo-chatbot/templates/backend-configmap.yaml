@@ -1,0 +1,17 @@
+{{/*
+[Task]: T050 [From]: spec.md FR-009, data-model.md §6
+Backend ConfigMap for non-sensitive configuration
+*/}}
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.backend.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.backend.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}

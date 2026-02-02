@@ -30,15 +30,32 @@ const getBaseURL = (): string => {
   return process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
 };
 
+// Determine if we're running over HTTPS
+const isHttps = getBaseURL().startsWith("https://");
+const useSecureCookies = process.env.USE_SECURE_COOKIES === "true" || isHttps;
+
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: getBaseURL(),
+  advanced: {
+    // Disable secure cookies when not using HTTPS (e.g., local Kubernetes)
+    useSecureCookies: useSecureCookies,
+    // Explicitly set cookie attributes for HTTP development
+    defaultCookieAttributes: {
+      secure: useSecureCookies,
+      httpOnly: true,
+      sameSite: "lax" as const,
+      path: "/",
+    },
+  },
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:3001",
     "https://todo-app-coral-two-71.vercel.app",
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+    // Kubernetes/Minikube: allow configurable trusted origins
+    ...(process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()) || []),
   ].filter(Boolean),
   emailAndPassword: {
     enabled: true,

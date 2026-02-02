@@ -30,6 +30,13 @@ security = HTTPBearer()
 BETTER_AUTH_URL = os.getenv("BETTER_AUTH_URL", "http://localhost:3000")
 JWKS_URL = f"{BETTER_AUTH_URL}/api/auth/jwks"
 
+# Valid issuers - support both localhost (browser) and K8s service URLs
+VALID_ISSUERS = [
+    "http://localhost:3000",
+    "http://todo-frontend:3000",
+    os.getenv("BETTER_AUTH_URL", "http://localhost:3000"),
+]
+
 # Cache for JWKS client
 _jwks_client: Optional[PyJWKClient] = None
 _jwks_cache_time: Optional[datetime] = None
@@ -91,35 +98,40 @@ def decode_jwt_token(token: str) -> dict:
         jwks_client = get_jwks_client()
         signing_key = jwks_client.get_signing_key_from_jwt(token)
 
-        # Decode the token
-        # Better Auth uses the base URL as both issuer and audience
-        payload = jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["EdDSA", "ES256", "RS256"],
-            audience=BETTER_AUTH_URL,
-            issuer=BETTER_AUTH_URL,
-            options={"verify_exp": True},
-        )
+        # Try decoding with each valid issuer/audience combination
+        # This handles the mismatch between browser URL (localhost) and K8s service URL
+        last_error = None
+        for issuer in VALID_ISSUERS:
+            try:
+                payload = jwt.decode(
+                    token,
+                    signing_key.key,
+                    algorithms=["EdDSA", "ES256", "RS256"],
+                    audience=issuer,
+                    issuer=issuer,
+                    options={"verify_exp": True},
+                )
+                logger.debug(f"Token decoded successfully using issuer: {issuer}")
+                return payload
+            except (jwt.InvalidAudienceError, jwt.InvalidIssuerError) as e:
+                last_error = e
+                continue
 
-        logger.debug("Token decoded successfully using JWKS")
-        return payload
+        # If we get here, none of the issuers worked
+        logger.warning(f"Authentication failed: Invalid issuer/audience. Tried: {VALID_ISSUERS}")
+        raise JWTAuthError("Invalid token issuer or audience")
 
     except jwt.ExpiredSignatureError:
         logger.warning("Authentication failed: Token has expired")
         raise JWTAuthError("Token has expired")
-    except jwt.InvalidAudienceError:
-        logger.warning("Authentication failed: Invalid audience")
-        raise JWTAuthError("Invalid token audience")
-    except jwt.InvalidIssuerError:
-        logger.warning("Authentication failed: Invalid issuer")
-        raise JWTAuthError("Invalid token issuer")
     except jwt.PyJWKClientError as e:
         logger.error(f"JWKS client error: {e}")
         raise JWTAuthError("Unable to verify token")
     except jwt.InvalidTokenError as e:
         logger.warning(f"Authentication failed: Invalid token - {str(e)}")
         raise JWTAuthError(f"Invalid token: {str(e)}")
+    except JWTAuthError:
+        raise
     except Exception as e:
         logger.error(f"Unexpected error during token verification: {e}")
         raise JWTAuthError("Token verification failed")

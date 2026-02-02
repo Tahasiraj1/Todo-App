@@ -1,0 +1,20 @@
+# [Task]: T028 [From]: spec.md FR-009, data-model.md §6
+# Backend ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: todo-chatbot
+data:
+  # Logging level
+  LOG_LEVEL: "info"
+  # CORS allowed origins (allow all for development)
+  CORS_ORIGINS: "*"
+  # Application port
+  PORT: "8000"
+  # Better Auth URL - points to frontend service for JWKS verification
+  BETTER_AUTH_URL: "http://todo-frontend:3000"

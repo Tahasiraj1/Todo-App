@@ -1,0 +1,24 @@
+# [Task]: T027 [From]: spec.md FR-009, data-model.md §6
+# Frontend ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: todo-chatbot
+data:
+  # Backend API URL (for client-side, set at build time via --build-arg)
+  NEXT_PUBLIC_API_URL: "http://localhost:8000"
+  # Node environment
+  NODE_ENV: "production"
+  # Better Auth URL (server-side session handling)
+  BETTER_AUTH_URL: "http://localhost:3000"
+  NEXT_PUBLIC_BETTER_AUTH_URL: "http://localhost:3000"
+  # Trusted origins for Better Auth (comma-separated)
+  # Include Minikube IP + NodePort and common localhost tunnel ports
+  TRUSTED_ORIGINS: "http://192.168.49.2:32278,http://127.0.0.1:32278,http://127.0.0.1:36065,http://127.0.0.1:44923,http://127.0.0.1:3000,http://localhost:3000"
+  # Disable secure cookies for HTTP (local Kubernetes development)
+  USE_SECURE_COOKIES: "false"

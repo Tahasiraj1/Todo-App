@@ -52,5 +52,4 @@ Thumbs.db
 
 # Project specific
 migrations/
-uv.lock
 todo_backend.egg-info/

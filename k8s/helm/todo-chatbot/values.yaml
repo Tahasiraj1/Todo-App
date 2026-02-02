@@ -1,0 +1,202 @@
+# [Task]: T042 [From]: spec.md FR-014, FR-015, contracts/values-schema.yaml
+# Default values for todo-chatbot Helm chart
+# This is a YAML-formatted file.
+
+# Global configuration
+global:
+  namespace: todo-app
+
+# Frontend (Next.js) configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: NodePort
+    port: 3000
+    # nodePort: 30080  # Uncomment to specify fixed port
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  env:
+    NEXT_PUBLIC_API_URL: "http://todo-backend:8000"
+    NODE_ENV: "production"
+
+  probes:
+    liveness:
+      path: /api/health
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /api/health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Backend (FastAPI) configuration
+backend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8000
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  env:
+    LOG_LEVEL: "info"
+    CORS_ORIGINS: "*"
+    PORT: "8000"
+    BETTER_AUTH_URL: "http://todo-frontend:3000"
+
+  dapr:
+    appId: "todo-backend"
+    appPort: "8000"
+    appProtocol: "http"
+    enableApiLogging: "true"
+
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Dapr configuration (Phase V)
+dapr:
+  enabled: false  # Set to true when Dapr is installed on cluster
+
+# Kafka configuration (Phase V)
+kafka:
+  enabled: false  # Set to true when Strimzi/Kafka is installed
+  brokers: "taskflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+
+# Notification Service (Phase V)
+notification:
+  enabled: false
+  replicaCount: 1
+
+  image:
+    repository: todo-notification
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8001
+
+  dapr:
+    appId: "notification-service"
+    appPort: "8001"
+    appProtocol: "http"
+    enableApiLogging: "true"
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Recurring Task Service (Phase V)
+recurringTask:
+  enabled: false
+  replicaCount: 1
+
+  image:
+    repository: todo-recurring-task
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8002
+
+  dapr:
+    appId: "recurring-task-service"
+    appPort: "8002"
+    appProtocol: "http"
+    enableApiLogging: "true"
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Secrets configuration
+# These should be provided at install time via --set or values file
+secrets:
+  # Set to false if using existing secrets
+  create: true
+  # Name of existing secret (if create=false)
+  existingSecret: ""
+  # Values (provide at install time)
+  databaseUrl: ""
+  openaiApiKey: ""
+  betterAuthSecret: ""
+  geminiApiKey: ""

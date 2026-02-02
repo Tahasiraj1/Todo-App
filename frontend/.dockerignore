@@ -1,0 +1,51 @@
+# [Task]: T014 [From]: spec.md FR-001
+# Docker ignore file for frontend build optimization
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs (will be created during build)
+.next/
+out/
+build/
+dist/
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed in image)
+*.md
+!README.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.tsbuildinfo
+next-env.d.ts

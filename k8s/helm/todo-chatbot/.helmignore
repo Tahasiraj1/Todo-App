@@ -1,0 +1,42 @@
+# Helm ignore patterns
+# Patterns to ignore when building packages
+
+# Common VCS dirs
+.git/
+.gitignore
+.bzr/
+.bzrignore
+.hg/
+.hgignore
+.svn/
+
+# Common backup files
+*.swp
+*.bak
+*.tmp
+*.orig
+*~
+
+# Various IDEs
+.project
+.idea/
+*.tmproj
+.vscode/
+
+# Kubernetes secrets (never package real secrets)
+*.secret.yaml
+secrets/
+
+# Testing files
+tests/
+*.test.yaml
+
+# Documentation extras (README.md is kept)
+CHANGELOG.md
+CONTRIBUTING.md
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile

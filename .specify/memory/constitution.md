@@ -252,6 +252,20 @@ In case of conflicts, priority order:
 - Database connection monitoring
 - Kafka topic lag monitoring (Phase V)
 
+## Development Environment
+
+### Runtime Environment
+
+**MUST**: All development and deployment MUST target Linux (WSL2 on Windows, native Linux, or containerized Linux).
+
+**Rationale**: The project runs on Linux environments (WSL2, containers, Kubernetes). Scripts and tooling must be compatible with bash/Linux.
+
+**Enforcement**:
+- Use bash scripts (not PowerShell) for automation
+- All scripts must be executable on Linux
+- Docker containers based on Linux images
+- Kubernetes deployments target Linux nodes
+
 ## Governance
 
 ### Constitution Authority

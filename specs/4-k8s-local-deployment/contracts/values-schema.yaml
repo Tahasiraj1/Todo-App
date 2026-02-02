@@ -1,0 +1,302 @@
+# Helm Values Schema for Todo Chatbot
+# JSON Schema for values.yaml validation
+# Reference: https://helm.sh/docs/topics/charts/#schema-files
+
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Todo Chatbot Helm Values
+description: Configuration values for the Todo Chatbot Helm chart
+type: object
+
+required:
+  - global
+  - frontend
+  - backend
+
+properties:
+  global:
+    type: object
+    description: Global configuration shared across all components
+    required:
+      - namespace
+    properties:
+      namespace:
+        type: string
+        description: Kubernetes namespace for all resources
+        default: todo-app
+        pattern: "^[a-z0-9-]+$"
+
+      labels:
+        type: object
+        description: Additional labels to apply to all resources
+        additionalProperties:
+          type: string
+
+  frontend:
+    type: object
+    description: Frontend (Next.js) deployment configuration
+    required:
+      - image
+    properties:
+      enabled:
+        type: boolean
+        description: Enable frontend deployment
+        default: true
+
+      replicaCount:
+        type: integer
+        description: Number of frontend pod replicas
+        minimum: 1
+        maximum: 10
+        default: 1
+
+      image:
+        type: object
+        required:
+          - repository
+        properties:
+          repository:
+            type: string
+            description: Container image repository
+            default: todo-frontend
+          tag:
+            type: string
+            description: Container image tag
+            default: latest
+          pullPolicy:
+            type: string
+            description: Image pull policy
+            enum: [Always, IfNotPresent, Never]
+            default: IfNotPresent
+
+      service:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Kubernetes service type
+            enum: [ClusterIP, NodePort, LoadBalancer]
+            default: NodePort
+          port:
+            type: integer
+            description: Service port
+            minimum: 1
+            maximum: 65535
+            default: 3000
+          nodePort:
+            type: integer
+            description: Node port (only for NodePort type)
+            minimum: 30000
+            maximum: 32767
+
+      resources:
+        type: object
+        description: Resource requests and limits
+        properties:
+          requests:
+            type: object
+            properties:
+              cpu:
+                type: string
+                description: CPU request
+                default: 100m
+              memory:
+                type: string
+                description: Memory request
+                default: 256Mi
+          limits:
+            type: object
+            properties:
+              cpu:
+                type: string
+                description: CPU limit
+                default: 500m
+              memory:
+                type: string
+                description: Memory limit
+                default: 512Mi
+
+      env:
+        type: object
+        description: Environment variables for frontend
+        properties:
+          NEXT_PUBLIC_API_URL:
+            type: string
+            description: Backend API URL
+            default: http://todo-backend:8000
+          NODE_ENV:
+            type: string
+            description: Node environment
+            enum: [development, production]
+            default: production
+
+      probes:
+        type: object
+        description: Health check probes configuration
+        properties:
+          liveness:
+            type: object
+            properties:
+              path:
+                type: string
+                default: /api/health
+              initialDelaySeconds:
+                type: integer
+                default: 15
+              periodSeconds:
+                type: integer
+                default: 10
+          readiness:
+            type: object
+            properties:
+              path:
+                type: string
+                default: /api/health
+              initialDelaySeconds:
+                type: integer
+                default: 5
+              periodSeconds:
+                type: integer
+                default: 5
+
+  backend:
+    type: object
+    description: Backend (FastAPI) deployment configuration
+    required:
+      - image
+    properties:
+      enabled:
+        type: boolean
+        description: Enable backend deployment
+        default: true
+
+      replicaCount:
+        type: integer
+        description: Number of backend pod replicas
+        minimum: 1
+        maximum: 10
+        default: 1
+
+      image:
+        type: object
+        required:
+          - repository
+        properties:
+          repository:
+            type: string
+            description: Container image repository
+            default: todo-backend
+          tag:
+            type: string
+            description: Container image tag
+            default: latest
+          pullPolicy:
+            type: string
+            description: Image pull policy
+            enum: [Always, IfNotPresent, Never]
+            default: IfNotPresent
+
+      service:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Kubernetes service type
+            enum: [ClusterIP, NodePort, LoadBalancer]
+            default: ClusterIP
+          port:
+            type: integer
+            description: Service port
+            minimum: 1
+            maximum: 65535
+            default: 8000
+
+      resources:
+        type: object
+        description: Resource requests and limits
+        properties:
+          requests:
+            type: object
+            properties:
+              cpu:
+                type: string
+                description: CPU request
+                default: 100m
+              memory:
+                type: string
+                description: Memory request
+                default: 256Mi
+          limits:
+            type: object
+            properties:
+              cpu:
+                type: string
+                description: CPU limit
+                default: 500m
+              memory:
+                type: string
+                description: Memory limit
+                default: 512Mi
+
+      env:
+        type: object
+        description: Environment variables for backend
+        properties:
+          LOG_LEVEL:
+            type: string
+            description: Logging level
+            enum: [debug, info, warning, error]
+            default: info
+          CORS_ORIGINS:
+            type: string
+            description: CORS allowed origins
+            default: "*"
+
+      probes:
+        type: object
+        description: Health check probes configuration
+        properties:
+          liveness:
+            type: object
+            properties:
+              path:
+                type: string
+                default: /health
+              initialDelaySeconds:
+                type: integer
+                default: 15
+              periodSeconds:
+                type: integer
+                default: 10
+          readiness:
+            type: object
+            properties:
+              path:
+                type: string
+                default: /health
+              initialDelaySeconds:
+                type: integer
+                default: 5
+              periodSeconds:
+                type: integer
+                default: 5
+
+  secrets:
+    type: object
+    description: Sensitive configuration (provide at install time)
+    properties:
+      create:
+        type: boolean
+        description: Create secrets from values (set false to use existing)
+        default: true
+      existingSecret:
+        type: string
+        description: Name of existing secret (if create=false)
+      databaseUrl:
+        type: string
+        description: PostgreSQL connection string (required)
+      openaiApiKey:
+        type: string
+        description: OpenAI API key (required)
+      betterAuthSecret:
+        type: string
+        description: Better Auth JWT secret (required)

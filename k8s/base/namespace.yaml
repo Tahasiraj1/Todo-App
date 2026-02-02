@@ -1,0 +1,10 @@
+# [Task]: T009 [From]: spec.md FR-006, data-model.md §1
+# Kubernetes namespace for Todo Chatbot application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+  labels:
+    app.kubernetes.io/name: todo-chatbot
+    app.kubernetes.io/part-of: todo-app
+    phase: phase-4

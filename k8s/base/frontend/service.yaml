@@ -1,0 +1,22 @@
+# [Task]: T031 [From]: spec.md FR-007, FR-008, data-model.md §4
+# Frontend Service - NodePort for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-frontend
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: todo-chatbot
+spec:
+  type: NodePort
+  selector:
+    app: todo-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+      # NodePort will be auto-assigned (30000-32767)
+      # Or specify: nodePort: 30080

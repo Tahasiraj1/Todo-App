@@ -1,0 +1,17 @@
+{{/*
+[Task]: T047 [From]: spec.md FR-009, data-model.md §6
+Frontend ConfigMap for non-sensitive configuration
+*/}}
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.frontend.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.frontend.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
