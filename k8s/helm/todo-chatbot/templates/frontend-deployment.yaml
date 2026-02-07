@@ -37,6 +37,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "todo-chatbot.secretName" . }}
                   key: BETTER_AUTH_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todo-chatbot.secretName" . }}
+                  key: DATABASE_URL
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           livenessProbe:

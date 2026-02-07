@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createTask, ApiClientError } from "@/lib/api";
-import type { Task, TaskPriority } from "@/types/task";
+import type { Task, TaskPriority, RecurrenceFrequency } from "@/types/task";
 import { Plus, ChevronDown, ChevronUp, Calendar, Repeat } from "lucide-react";
 
 interface TaskFormProps {
@@ -26,7 +26,7 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurrenceFrequency, setRecurrenceFrequency] = useState<string>("");
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency | "">("");
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +95,7 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
         tags,
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
         is_recurring: isRecurring,
-        recurrence_frequency: isRecurring ? recurrenceFrequency || null : null,
+        recurrence_frequency: isRecurring && recurrenceFrequency ? recurrenceFrequency : null,
         recurrence_interval: isRecurring ? recurrenceInterval : 1,
       });
 
@@ -288,7 +288,7 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
                 />
                 <select
                   value={recurrenceFrequency}
-                  onChange={(e) => setRecurrenceFrequency(e.target.value)}
+                  onChange={(e) => setRecurrenceFrequency(e.target.value as RecurrenceFrequency | "")}
                   className="rounded-sm border border-border/60 bg-background px-2 py-1.5 text-xs font-mono text-foreground focus:border-terminal/60 focus:outline-none"
                 >
                   <option value="">select...</option>
