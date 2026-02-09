@@ -146,11 +146,11 @@ async def handle_task_completed(request: Request) -> dict:
 
         invoke_url = (
             f"{DAPR_BASE_URL}/v1.0/invoke/{BACKEND_APP_ID}/method"
-            f"/api/{user_id}/tasks"
+            f"/api/internal/create-task"
         )
 
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(invoke_url, json=new_task)
+            response = await client.post(invoke_url, json={"user_id": user_id, "task": new_task})
             response.raise_for_status()
 
         logger.info(

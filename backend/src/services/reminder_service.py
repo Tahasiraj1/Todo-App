@@ -59,7 +59,7 @@ class ReminderService:
                 "remind_at": remind_at.isoformat(),
                 "type": "reminder",
             },
-            "schedule": f"@at={remind_at.isoformat()}",
+            "dueTime": remind_at.isoformat(),
         }
 
         try:

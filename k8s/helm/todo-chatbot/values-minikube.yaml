@@ -1,18 +1,30 @@
 # [Task]: T043 [From]: spec.md FR-014, research.md §7
-# Minikube-specific values for local development
-# Usage: helm install todo-chatbot ./k8s/helm/todo-chatbot -f ./k8s/helm/todo-chatbot/values-minikube.yaml
+# Minikube-specific values for local development (Phase 5 — full stack)
+# Usage: helm upgrade --install todo-chatbot ./k8s/helm/todo-chatbot -f ./k8s/helm/todo-chatbot/values-minikube.yaml
 
 # Global configuration
 global:
   namespace: todo-app
 
+# Enable Dapr and Kafka
+dapr:
+  enabled: true
+
+kafka:
+  enabled: true
+  brokers: "taskflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+
 # Frontend - reduced resources for local dev
 frontend:
+  enabled: true
   replicaCount: 1
   image:
     repository: todo-frontend
     tag: latest
     pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 3000
   resources:
     requests:
       memory: "128Mi"
@@ -20,14 +32,35 @@ frontend:
     limits:
       memory: "256Mi"
       cpu: "250m"
+  env:
+    NEXT_PUBLIC_API_URL: "http://todo-backend:8000"
+    NODE_ENV: "production"
+    BETTER_AUTH_URL: "http://localhost:3000"
+  probes:
+    liveness:
+      path: /api/health
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /api/health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
 
 # Backend - reduced resources for local dev
 backend:
+  enabled: true
   replicaCount: 1
   image:
     repository: todo-backend
     tag: latest
     pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
   resources:
     requests:
       memory: "128Mi"
@@ -35,11 +68,113 @@ backend:
     limits:
       memory: "256Mi"
       cpu: "250m"
+  env:
+    LOG_LEVEL: "info"
+    CORS_ORIGINS: "*"
+    PORT: "8000"
+    DAPR_ENABLED: "true"
+    BETTER_AUTH_URL: "http://todo-frontend:3000"
+  dapr:
+    appId: "todo-backend"
+    appPort: "8000"
+    appProtocol: "http"
+    enableApiLogging: "true"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      timeoutSeconds: 10
+      failureThreshold: 5
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
 
-# Secrets - create from values
+# Notification Service
+notification:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-notification
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8001
+  dapr:
+    appId: "notification-service"
+    appPort: "8001"
+    appProtocol: "http"
+    enableApiLogging: "true"
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "125m"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Recurring Task Service
+recurringTask:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-recurring-task
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8002
+  dapr:
+    appId: "recurring-task-service"
+    appPort: "8002"
+    appProtocol: "http"
+    enableApiLogging: "true"
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "125m"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Secrets - provide at install time via --set
 secrets:
   create: true
-  # Provide these at install time:
-  # --set secrets.databaseUrl="postgresql://..."
-  # --set secrets.openaiApiKey="sk-..."
-  # --set secrets.betterAuthSecret="..."
+  databaseUrl: ""
+  openaiApiKey: ""
+  betterAuthSecret: ""
+  geminiApiKey: ""
+
+# No ingress for local dev
+ingress:
+  enabled: false

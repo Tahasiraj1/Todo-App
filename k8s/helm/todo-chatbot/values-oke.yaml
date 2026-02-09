@@ -1,9 +1,14 @@
 # [Task]: T040 [From]: plan.md §Phase D, spec.md US8
 # Oracle OKE overrides — ARM64 A1 shapes, always-free tier
 # Usage: helm upgrade --install todo-chatbot ./k8s/helm/todo-chatbot -f k8s/helm/todo-chatbot/values-oke.yaml
+# Region: ap-hyderabad-1 (India South - Hyderabad)
 
 global:
   namespace: todo-app
+
+# OCIR image pull secret for OKE
+imagePullSecrets:
+  - name: ocir-secret
 
 # Enable Dapr and Kafka on cloud
 dapr:
@@ -17,7 +22,7 @@ frontend:
   enabled: true
   replicaCount: 1
   image:
-    repository: <region>.ocir.io/<tenancy>/todo-frontend
+    repository: ap-hyderabad-1.ocir.io/axy14wjwkrol/todo-frontend
     tag: latest
     pullPolicy: Always
   service:
@@ -30,12 +35,29 @@ frontend:
     limits:
       memory: "384Mi"
       cpu: "400m"
+  env:
+    NEXT_PUBLIC_API_URL: "https://todo.tahasiraj.com"
+    NODE_ENV: "production"
+    BETTER_AUTH_URL: "https://todo.tahasiraj.com"
+  probes:
+    liveness:
+      path: /api/health
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /api/health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
 
 backend:
   enabled: true
   replicaCount: 1
   image:
-    repository: <region>.ocir.io/<tenancy>/todo-backend
+    repository: ap-hyderabad-1.ocir.io/axy14wjwkrol/todo-backend
     tag: latest
     pullPolicy: Always
   service:
@@ -53,14 +75,42 @@ backend:
     CORS_ORIGINS: "*"
     PORT: "8000"
     DAPR_ENABLED: "true"
+    BETTER_AUTH_URL: "https://todo.tahasiraj.com"
+    JWKS_INTERNAL_URL: "http://todo-frontend:3000"
+  dapr:
+    appId: "todo-backend"
+    appPort: "8000"
+    appProtocol: "http"
+    enableApiLogging: "true"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
 
 notification:
   enabled: true
   replicaCount: 1
   image:
-    repository: <region>.ocir.io/<tenancy>/todo-notification
+    repository: ap-hyderabad-1.ocir.io/axy14wjwkrol/todo-notification
     tag: latest
     pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8001
+  dapr:
+    appId: "notification-service"
+    appPort: "8001"
+    appProtocol: "http"
+    enableApiLogging: "true"
   resources:
     requests:
       memory: "96Mi"
@@ -68,14 +118,35 @@ notification:
     limits:
       memory: "192Mi"
       cpu: "200m"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
 
 recurringTask:
   enabled: true
   replicaCount: 1
   image:
-    repository: <region>.ocir.io/<tenancy>/todo-recurring-task
+    repository: ap-hyderabad-1.ocir.io/axy14wjwkrol/todo-recurring-task
     tag: latest
     pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8002
+  dapr:
+    appId: "recurring-task-service"
+    appPort: "8002"
+    appProtocol: "http"
+    enableApiLogging: "true"
   resources:
     requests:
       memory: "96Mi"
@@ -83,10 +154,31 @@ recurringTask:
     limits:
       memory: "192Mi"
       cpu: "200m"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
 
-# Ingress for external access
+# Secrets — provide at install time via --set
+secrets:
+  create: true
+  databaseUrl: ""
+  openaiApiKey: ""
+  betterAuthSecret: ""
+  geminiApiKey: ""
+
+# Ingress for external access (optional — use port-forward initially)
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   hosts:
     - host: todo.example.com

@@ -31,6 +31,10 @@ spec:
         app: todo-recurring-task
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: recurring-task
           image: "{{ .Values.recurringTask.image.repository }}:{{ .Values.recurringTask.image.tag }}"

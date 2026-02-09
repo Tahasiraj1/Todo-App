@@ -28,7 +28,9 @@ security = HTTPBearer()
 
 # JWKS URL from Better Auth
 BETTER_AUTH_URL = os.getenv("BETTER_AUTH_URL", "http://localhost:3000")
-JWKS_URL = f"{BETTER_AUTH_URL}/api/auth/jwks"
+# Use internal URL for JWKS fetching (avoids going through external proxy)
+JWKS_INTERNAL_URL = os.getenv("JWKS_INTERNAL_URL", BETTER_AUTH_URL)
+JWKS_URL = f"{JWKS_INTERNAL_URL}/api/auth/jwks"
 
 # Valid issuers - support both localhost (browser) and K8s service URLs
 VALID_ISSUERS = [

@@ -7,7 +7,7 @@
  * Shows browser notifications when permission granted, falls back to in-app reminders.
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, type MutableRefObject } from "react";
 import { TodoWebSocket, type WebSocketMessage } from "@/lib/websocket";
 import {
   requestNotificationPermission,
@@ -68,20 +68,24 @@ export function NotificationProvider({
     [onTaskUpdate, notifPermission]
   );
 
-  // Establish WebSocket connection
+  // Use ref for message handler to avoid WebSocket reconnection on handler changes
+  const handleMessageRef: MutableRefObject<typeof handleMessage> = useRef(handleMessage);
+  handleMessageRef.current = handleMessage;
+
+  // Establish WebSocket connection — only reconnect when userId changes
   useEffect(() => {
     if (!userId) return;
 
     const ws = new TodoWebSocket(userId);
     wsRef.current = ws;
-    ws.onMessage(handleMessage);
+    ws.onMessage((msg) => handleMessageRef.current(msg));
     ws.connect();
 
     return () => {
       ws.close();
       wsRef.current = null;
     };
-  }, [userId, handleMessage]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dismissReminder = (taskId: number) => {
     setReminders((prev) => prev.filter((r) => r.taskId !== taskId));

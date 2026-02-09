@@ -16,10 +16,13 @@ from fastapi.middleware.cors import CORSMiddleware
 # Load environment variables
 load_dotenv()
 
-from .db import create_db_and_tables
+from sqlmodel import Session
+from .db import create_db_and_tables, get_engine
 from .middleware.error_handler import setup_error_handlers
 from .api.routes import router as api_router
 from .models.activity_log import ActivityLogEntry  # noqa: F401 — register for table creation
+from .models.schemas import TaskCreate
+from .services.task_service import TaskService
 from .services.websocket_manager import ws_manager
 
 # Configure structured JSON logging for production observability
@@ -81,11 +84,37 @@ setup_error_handlers(app)
 # Include API routes
 app.include_router(api_router, prefix="/api")
 
+# Mount Dapr Jobs callback at top-level /job/{name} (Dapr convention)
+from .api.routes.jobs import router as jobs_router
+app.include_router(jobs_router, tags=["Dapr Jobs"])
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.post("/api/internal/create-task")
+async def internal_create_task(request_data: dict):
+    """
+    Internal endpoint for recurring-task service to create next task occurrence.
+    Not exposed externally — called via Dapr service invocation.
+    """
+    user_id = request_data.get("user_id", "")
+    task_payload = request_data.get("task", {})
+    logger.info("internal/create-task: user_id=%s, title=%s", user_id, task_payload.get("title", ""))
+    if not user_id or not task_payload:
+        return {"status": "error", "detail": "Missing user_id or task"}
+    try:
+        task_data = TaskCreate(**task_payload)
+        with Session(get_engine()) as session:
+            service = TaskService(session, user_id)
+            task = service.create_task(task_data)
+            return {"status": "ok", "task_id": task.id}
+    except Exception as e:
+        logger.error("internal/create-task failed: %s", str(e))
+        return {"status": "error", "detail": str(e)}
 
 
 @app.post("/api/internal/ws-broadcast")
@@ -96,6 +125,7 @@ async def ws_broadcast(request_data: dict):
     """
     user_id = request_data.get("user_id", "")
     message = request_data.get("message", {})
+    logger.info("ws-broadcast received: user_id=%s, message_type=%s", user_id, message.get("type", "none"))
     if user_id and message:
         await ws_manager.broadcast_to_user(user_id, message)
     return {"status": "ok"}

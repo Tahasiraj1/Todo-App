@@ -40,7 +40,9 @@ class WebSocketManager:
         """Send a message to all of a user's connected WebSocket clients."""
         connections = self._connections.get(user_id, set())
         if not connections:
+            logger.info("No WebSocket connections for user=%s, message dropped", user_id)
             return
+        logger.info("Broadcasting to user=%s, connections=%d, type=%s", user_id, len(connections), message.get("type", "unknown"))
 
         payload = json.dumps(message)
         dead_connections = set()

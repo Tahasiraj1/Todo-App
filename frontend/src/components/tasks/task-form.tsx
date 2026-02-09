@@ -85,6 +85,11 @@ export function TaskForm({ onTaskCreated }: TaskFormProps) {
       return;
     }
 
+    if (isRecurring && !recurrenceFrequency) {
+      setError("Please select a recurrence frequency (daily, weekly, or monthly)");
+      return;
+    }
+
     setIsLoading(true);
 
     try {

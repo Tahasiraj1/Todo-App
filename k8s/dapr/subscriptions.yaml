@@ -1,5 +1,7 @@
-# [Task]: T033 [From]: contracts/dapr-components.yaml §2-5
 # Dapr declarative subscription CRDs for all 3 topics
+# NOTE: Scopes not available in this Dapr CRD version (1.16.8).
+# All subscriptions deliver to all Dapr apps — apps return 404 for unhandled routes
+# which Dapr treats as non-retriable (drops the message for that app).
 ---
 # task-events → backend (activity log handler)
 apiVersion: dapr.io/v2alpha1
@@ -12,8 +14,6 @@ spec:
   topic: task-events
   routes:
     default: /api/events/task-events
-  scopes:
-    - todo-backend
 ---
 # task-events → recurring task service
 apiVersion: dapr.io/v2alpha1
@@ -26,8 +26,6 @@ spec:
   topic: task-events
   routes:
     default: /api/events/task-completed
-  scopes:
-    - recurring-task-service
 ---
 # reminders → notification service
 apiVersion: dapr.io/v2alpha1
@@ -40,8 +38,6 @@ spec:
   topic: reminders
   routes:
     default: /api/events/reminders
-  scopes:
-    - notification-service
 ---
 # task-updates → notification service (real-time sync via WebSocket)
 apiVersion: dapr.io/v2alpha1
@@ -54,5 +50,3 @@ spec:
   topic: task-updates
   routes:
     default: /api/events/task-updates
-  scopes:
-    - notification-service

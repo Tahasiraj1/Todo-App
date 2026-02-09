@@ -1,0 +1,95 @@
+# Test Report Output Schema
+# Defines the structure of the final test report
+
+test_report:
+  type: object
+  properties:
+    metadata:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: "Test execution date"
+        target_url:
+          type: string
+          description: "Application URL tested"
+        branch:
+          type: string
+          description: "Git branch under test"
+        tester:
+          type: string
+          description: "Who ran the tests (agent/human)"
+
+    summary:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: "Total test cases"
+        passed:
+          type: integer
+        failed:
+          type: integer
+        skipped:
+          type: integer
+        blocked:
+          type: integer
+        pass_rate:
+          type: string
+          description: "Percentage of tests passing"
+
+    results:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: "Test case ID (TC-01 through TC-33)"
+          phase:
+            type: integer
+            description: "Test phase number (1-8)"
+          description:
+            type: string
+          status:
+            type: string
+            enum: [PASS, FAIL, SKIP, BLOCKED]
+          hackathon_ref:
+            type: string
+            description: "Hackathon spec requirement reference"
+          notes:
+            type: string
+            description: "Any observations"
+
+    demo_structure:
+      type: object
+      properties:
+        total_duration_seconds:
+          type: integer
+          maximum: 90
+        segments:
+          type: array
+          items:
+            type: object
+            properties:
+              start_seconds:
+                type: integer
+              duration_seconds:
+                type: integer
+              title:
+                type: string
+              features:
+                type: array
+                items:
+                  type: string
+              script:
+                type: string
+
+# Example output format (markdown table):
+#
+# | ID | Phase | Description | Status | Hackathon Ref | Notes |
+# |----|-------|-------------|--------|---------------|-------|
+# | TC-01 | 1 | App pods Running | PASS | Cloud Deployment | 4/4 pods with sidecars |
+# | TC-02 | 1 | Dapr system pods | PASS | Dapr | 4 pods running |
+# | ... | | | | | |

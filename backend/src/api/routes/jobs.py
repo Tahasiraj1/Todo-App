@@ -17,15 +17,22 @@ router = APIRouter()
 _event_service = EventService()
 
 
-@router.post("/jobs/{job_name}")
+@router.post("/job/{job_name}")
 async def handle_job_callback(job_name: str, request: Request) -> dict:
     """
-    Dapr Jobs callback endpoint.
+    Dapr Jobs callback endpoint (POST /job/<name>).
     When a scheduled reminder fires, publish to the reminders topic.
     """
     try:
         body = await request.json()
-        data = body.get("data", body)
+
+        # Dapr Jobs sends payload as base64-encoded "Payload" field
+        import base64, json as _json
+        if "Payload" in body:
+            raw = base64.b64decode(body["Payload"])
+            data = _json.loads(raw)
+        else:
+            data = body.get("data", body)
 
         job_type = data.get("type")
         if job_type != "reminder":

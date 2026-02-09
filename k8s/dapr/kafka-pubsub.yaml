@@ -11,8 +11,6 @@ spec:
   metadata:
     - name: brokers
       value: "taskflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
-    - name: consumerGroup
-      value: "todo-backend"
     - name: authRequired
       value: "false"
     - name: maxMessageBytes
